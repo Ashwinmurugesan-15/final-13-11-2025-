@@ -8,59 +8,101 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #6366f1;
+            --primary-color: #5b5fef;
+            --secondary-color: #7276f3;
             --danger-color: #ef4444;
-            --light-bg: #f8fafc;
+            --light-bg: #e8ecf4;
         }
 
         body {
-            background-color: var(--light-bg);
+            background: linear-gradient(135deg, #e8ecf4 0%, #d4d8f0 100%);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
         }
 
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(90deg, #5b5fef 0%, #7276f3 100%) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            min-height: 56px;
         }
 
         .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: white !important;
+            display: flex;
+            align-items: center;
         }
 
         .navbar-nav .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: rgba(255, 255, 255, 0.95) !important;
             font-weight: 500;
+            font-size: 0.9375rem;
             padding: 0.5rem 1rem !important;
-            margin: 0 0.25rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            margin: 0;
+            border-radius: 0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .navbar-nav .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.15);
             color: white !important;
+        }
+
+        .navbar-nav .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+
+        .page-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .btn-add-user {
+            background: #5b5fef;
+            color: white;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-user:hover {
+            background: #4f46e5;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(91, 95, 239, 0.3);
         }
 
         .card {
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            font-weight: 600;
-            border: none;
-            padding: 1.25rem 1.5rem;
-        }
-
-        .btn {
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 0.5rem 1.25rem;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            background: white;
+            overflow: hidden;
         }
 
         .table {
@@ -68,123 +110,157 @@
         }
 
         .table thead th {
-            background-color: #f1f5f9;
-            color: #475569;
+            background-color: #f8fafc;
+            color: #1f2937;
             font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .table tbody td {
+            padding: 1rem 1.5rem;
+            vertical-align: middle;
+            color: #374151;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8fafc;
         }
 
         .badge {
-            padding: 0.5rem 0.75rem;
-            font-weight: 500;
+            padding: 0.375rem 0.75rem;
+            font-weight: 600;
+            font-size: 0.75rem;
             border-radius: 6px;
+        }
+
+        .badge.bg-danger {
+            background-color: #ef4444 !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: #6b7280 !important;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">
-                <img src="/static/images/Screenshot 2025-11-17 105428.png" alt="GuhaTek Logo" style="height: 70px; background: white; padding: 12px 24px; border-radius: 4px; margin-right: 1.5rem;">
+                <img src="/static/images/Screenshot 2025-11-17 105428.png" alt="GuhaTek Logo" style="height: 60px; background: white; padding: 10px 20px; border-radius: 4px; margin-right: 1rem;">
                 Candidate Tracking System
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="/">
-                    <i class="bi bi-house me-1"></i>
+                    <i class="bi bi-house"></i>
                     Home
                 </a>
                 <a class="nav-link active" href="/users">
-                    <i class="bi bi-people me-1"></i>
+                    <i class="bi bi-people"></i>
                     User Management
                 </a>
                 <a class="nav-link" href="/logout">
-                    <i class="bi bi-box-arrow-right me-1"></i>
+                    <i class="bi bi-box-arrow-right"></i>
                     Logout
                 </a>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-people me-2"></i>
-                            User Management
-                        </h5>
-                        {% if isAdmin %}
-                        <button class="btn btn-light" onclick="openAddUserModal()">
-                            <i class="bi bi-plus-circle-fill me-1"></i> Add New User
-                        </button>
-                        {% endif %}
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Username</th>
-                                        <th>Role</th>
-                                        <th>Created At</th>
-                                        {% if isAdmin %}
+    <div class="page-container">
+        <div class="page-header">
+            <h1 class="page-title">User Management</h1>
+            {% if isAdmin %}
+            <button class="btn-add-user" onclick="openAddUserModal()">
+                <i class="bi bi-plus-circle-fill"></i>
+                Add New User
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                            {% if isAdmin %}
                             <th>Actions</th>
                             {% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTableBody">
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-person-plus-fill me-2"></i>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; background: #d1d5db;">
+                <div class="modal-header" style="background: transparent; border: none; padding: 1.5rem 2rem; border-radius: 20px 20px 0 0;">
+                    <h5 class="modal-title" style="color: #2563eb; font-weight: 600; font-size: 1.25rem;">
+                        <i class="bi bi-person-plus-fill me-2" style="font-size: 1.5rem;"></i>
                         Add New User
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 2rem;">
                     <form id="addUserForm">
                         <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <label for="username" class="form-label" style="color: #374151; font-weight: 500; margin-bottom: 0.5rem;">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required style="padding: 0.75rem 1rem; border-radius: 10px; border: none; background: white; font-size: 0.95rem;">
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <label for="password" class="form-label" style="color: #374151; font-weight: 500; margin-bottom: 0.5rem;">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required style="padding: 0.75rem 1rem; border-radius: 10px; border: none; background: white; font-size: 0.95rem;">
                         </div>
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isAdmin" name="isAdmin">
-                                <label class="form-check-label" for="isAdmin">
+                            <div class="form-check" style="padding-left: 0; display: flex; align-items: center;">
+                                <input class="form-check-input" type="checkbox" id="isAdmin" name="isAdmin" style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; border-radius: 4px; border: 2px solid #9ca3af;">
+                                <label class="form-check-label" for="isAdmin" style="color: #374151; font-weight: 500; font-size: 0.95rem;">
                                     Admin User
                                 </label>
                             </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveUser()">Save User</button>
+                <div class="modal-footer" style="border: none; padding: 0 2rem 2rem 2rem; gap: 1rem;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: #c4c8cc; color: #374151; border: none; padding: 0.75rem 2rem; border-radius: 10px; font-weight: 600;">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()" style="background: #2563eb; border: none; padding: 0.75rem 2rem; border-radius: 10px; font-weight: 600;">Save User</button>
                 </div>
             </div>
         </div>
@@ -230,7 +306,7 @@
                             </td>
                             <td>${new Date(user.created_at).toLocaleDateString()}</td>
                             <td>
-                                <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">
+                                <button class="btn-delete" onclick="deleteUser(${user.id}, '${user.username}')">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
                             </td>

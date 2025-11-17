@@ -783,6 +783,15 @@ function populateTable(data, isAdmin) {
                     td.style.textOverflow = 'ellipsis';
                     td.style.whiteSpace = 'nowrap';
                     td.title = row['Remarks'] || ''; // Show full text on hover
+                } else if (column === 'Final Remarks') {
+                    // Final Remarks column - expanded width
+                    td.textContent = row['Final Remarks'] || '';
+                    td.style.minWidth = '300px';
+                    td.style.maxWidth = '400px';
+                    td.style.overflow = 'hidden';
+                    td.style.textOverflow = 'ellipsis';
+                    td.style.whiteSpace = 'nowrap';
+                    td.title = row['Final Remarks'] || ''; // Show full text on hover
                 } else {
                     td.textContent = row[column] || '';
                 }
