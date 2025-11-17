@@ -56,7 +56,8 @@ const PREDEFINED_DROPDOWNS = {
         'Accepted',
         'Rejected',
         'Joined'
-    ]
+    ],
+    'Reject Mail Sent': ['Yes', 'No']
 };
 
 // Initialize the application
@@ -583,6 +584,9 @@ function populateTable(data, isAdmin) {
             if (column === 'Interview Status') {
                 th.style.minWidth = '200px';
             }
+            if (column === 'Reject Mail Sent') {
+                th.style.minWidth = '150px';
+            }
             headerRow.appendChild(th);
         });
         
@@ -606,6 +610,10 @@ function populateTable(data, isAdmin) {
                 tr.classList.add('row-accepted');
             } else if (applicationStatus === 'Rejected') {
                 tr.classList.add('row-rejected');
+            } else if (applicationStatus === 'On Hold') {
+                tr.classList.add('row-onhold');
+            } else if (applicationStatus === 'Proceed Further') {
+                tr.classList.add('row-proceed');
             }
             
             // Add click event to show candidate details
@@ -653,7 +661,7 @@ function populateTable(data, isAdmin) {
                     } else {
                         td.textContent = row[column] || '';
                     }
-                } else if (column === 'Interview Status' || column === 'Application Status') {
+                } else if (column === 'Interview Status' || column === 'Application Status' || column === 'Reject Mail Sent') {
                     td.dataset.column = column;
                     const currentStatus = row[column] || '';
 
@@ -661,17 +669,32 @@ function populateTable(data, isAdmin) {
                     select.className = 'form-select';
 
                     const statusOptions = dropdownOptions[column] || [];
+                    
+                    // Add empty/null option for Reject Mail Sent (always first)
+                    if (column === 'Reject Mail Sent') {
+                        const emptyOption = document.createElement('option');
+                        emptyOption.value = '';
+                        emptyOption.textContent = '';
+                        // Select empty option if current status is empty or null
+                        if (!currentStatus || currentStatus === '' || currentStatus === null) {
+                            emptyOption.selected = true;
+                        }
+                        select.appendChild(emptyOption);
+                    }
+                    
                     if (statusOptions.length > 0) {
                         statusOptions.forEach(option => {
                             const optionElement = document.createElement('option');
                             optionElement.value = option;
                             optionElement.textContent = option;
-                            if (option === currentStatus) {
+                            // Only select if it matches current status and current status is not empty
+                            if (option === currentStatus && currentStatus && currentStatus !== '') {
                                 optionElement.selected = true;
                             }
                             select.appendChild(optionElement);
                         });
-                        if (currentStatus && !statusOptions.includes(currentStatus)) {
+                        // If current status exists but not in options, add it
+                        if (currentStatus && currentStatus !== '' && !statusOptions.includes(currentStatus)) {
                             const optionElement = document.createElement('option');
                             optionElement.value = currentStatus;
                             optionElement.textContent = currentStatus;
@@ -679,14 +702,17 @@ function populateTable(data, isAdmin) {
                             select.appendChild(optionElement);
                         }
                     } else {
+                        // Fallback if no options available
                         const optionElement = document.createElement('option');
-                        optionElement.value = currentStatus;
+                        optionElement.value = currentStatus || '';
                         optionElement.textContent = currentStatus || 'Select status';
-                        optionElement.selected = true;
+                        if (currentStatus) {
+                            optionElement.selected = true;
+                        }
                         select.appendChild(optionElement);
                     }
 
-                    // Allow both admin and non-admin users to edit Interview Status and Application Status
+                    // Allow both admin and non-admin users to edit Interview Status, Application Status, and Reject Mail Sent
                     select.addEventListener('change', (e) => {
                         const newStatus = e.target.value;
                         const rowElement = select.closest('tr');
@@ -698,12 +724,16 @@ function populateTable(data, isAdmin) {
                         // Update row color immediately based on Application Status
                         if (column === 'Application Status') {
                             // Remove existing status classes
-                            rowElement.classList.remove('row-accepted', 'row-rejected');
+                            rowElement.classList.remove('row-accepted', 'row-rejected', 'row-onhold', 'row-proceed');
                             // Add new status class
                             if (newStatus === 'Accepted') {
                                 rowElement.classList.add('row-accepted');
                             } else if (newStatus === 'Rejected') {
                                 rowElement.classList.add('row-rejected');
+                            } else if (newStatus === 'On Hold') {
+                                rowElement.classList.add('row-onhold');
+                            } else if (newStatus === 'Proceed Further') {
+                                rowElement.classList.add('row-proceed');
                             }
                         }
                         
@@ -849,11 +879,15 @@ function updateRecordStatus(index, column, newStatus, rowElement = null, oldStat
             showNotification(data.message || 'Failed to update status.', 'error');
             // Revert row color if update failed and we have the row element
             if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
-                rowElement.classList.remove('row-accepted', 'row-rejected');
+                rowElement.classList.remove('row-accepted', 'row-rejected', 'row-onhold', 'row-proceed');
                 if (oldStatus === 'Accepted') {
                     rowElement.classList.add('row-accepted');
                 } else if (oldStatus === 'Rejected') {
                     rowElement.classList.add('row-rejected');
+                } else if (oldStatus === 'On Hold') {
+                    rowElement.classList.add('row-onhold');
+                } else if (oldStatus === 'Proceed Further') {
+                    rowElement.classList.add('row-proceed');
                 }
             }
             fetchData(); // Revert change on failure
@@ -864,11 +898,15 @@ function updateRecordStatus(index, column, newStatus, rowElement = null, oldStat
         showNotification('Error updating record', 'error');
         // Revert row color if update failed and we have the row element
         if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
-            rowElement.classList.remove('row-accepted', 'row-rejected');
+            rowElement.classList.remove('row-accepted', 'row-rejected', 'row-onhold', 'row-proceed');
             if (oldStatus === 'Accepted') {
                 rowElement.classList.add('row-accepted');
             } else if (oldStatus === 'Rejected') {
                 rowElement.classList.add('row-rejected');
+            } else if (oldStatus === 'On Hold') {
+                rowElement.classList.add('row-onhold');
+            } else if (oldStatus === 'Proceed Further') {
+                rowElement.classList.add('row-proceed');
             }
         }
         fetchData(); // Revert change on failure
@@ -953,7 +991,12 @@ function populateFormFields(formId, data = null) {
 
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
-                defaultOption.textContent = `Select ${field}...`;
+                // Empty option for Reject Mail Sent, otherwise show "Select..."
+                if (field === 'Reject Mail Sent') {
+                    defaultOption.textContent = '';
+                } else {
+                    defaultOption.textContent = `Select ${field}...`;
+                }
                 input.appendChild(defaultOption);
 
                 dropdownOptions[field].forEach(option => {
@@ -1085,7 +1128,7 @@ function openEditModal(index, isAdmin) {
         let input;
         const isEditable = isAdmin || editableFieldsForUser.includes(column);
         
-        if (column === 'Interview Status' || column === 'Application Status') {
+        if (column === 'Interview Status' || column === 'Application Status' || column === 'Reject Mail Sent') {
             input = document.createElement('select');
             input.className = 'form-select';
             if (!isEditable) {
@@ -1094,10 +1137,17 @@ function openEditModal(index, isAdmin) {
                 input.style.cursor = 'not-allowed';
             }
             
-            // Add default option
+            // Add default/empty option
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
-            defaultOption.textContent = 'Select ' + column;
+            if (column === 'Reject Mail Sent') {
+                defaultOption.textContent = ''; // Empty option for Reject Mail Sent
+            } else {
+                defaultOption.textContent = 'Select ' + column;
+            }
+            if (!record[column] || record[column] === '') {
+                defaultOption.selected = true;
+            }
             input.appendChild(defaultOption);
             
             // Add dropdown options if available
@@ -2398,11 +2448,18 @@ function showCandidateDetails(candidate, index, isAdmin) {
                             <input type="url" class="form-control edit-mode" id="input-${field.replace(/\s/g, '')}" value="${displayValue}" style="display: none;" ${!isEditable ? 'readonly' : ''}>
                         </div>
                     `;
-                } else if (field === 'Interview Status' || field === 'Application Status') {
+                } else if (field === 'Interview Status' || field === 'Application Status' || field === 'Reject Mail Sent') {
                     const isEditable = editableFields === null || editableFields.includes(field);
                     // Always show as dropdown; disable for non-admin users
                     const statusOptions = dropdownOptions[field] || [];
                     let optionsHTML = '';
+                    
+                    // Add empty/null option for Reject Mail Sent
+                    if (field === 'Reject Mail Sent') {
+                        const emptySelected = !candidate[field] || candidate[field] === '' ? 'selected' : '';
+                        optionsHTML += `<option value="" ${emptySelected}></option>`;
+                    }
+                    
                     statusOptions.forEach(option => {
                         const selected = candidate[field] === option ? 'selected' : '';
                         optionsHTML += `<option value="${option}" ${selected}>${option}</option>`;

@@ -195,72 +195,73 @@ def load_data():
 
 # Save data to Excel
 def save_data(data):
-    if not os.path.exists(EXCEL_FILE):
-        create_sample_excel()
+    try:
+        if not os.path.exists(EXCEL_FILE):
+            create_sample_excel()
 
-    wb = openpyxl.load_workbook(EXCEL_FILE)
-    sheet = wb[SHEET_NAME]
+        wb = openpyxl.load_workbook(EXCEL_FILE)
+        sheet = wb[SHEET_NAME]
 
-    # Clear existing data (keep headers)
-    for row in sheet.iter_rows(min_row=2):
-        for cell in row:
-            cell.value = None
-
-    # Write new data
-    headers = [cell.value for cell in sheet[1]]
-    for row_num, row_data in enumerate(data, 2):
-        for col_num, header in enumerate(headers, 1):
-            sheet.cell(row=row_num, column=col_num).value = row_data.get(header, '')
-
-    wb.save(EXCEL_FILE)
-    wb.close()
-    print(f"Data saved to Excel: {data}")
-    
-    # Desired field order (keep 'Date' at the beginning)
-    desired_fields = [
-        'Name', 'Email ID', 'Contact Number', 'Interested Position', 'Current Role',
-        'Current Organization', 'Current Location', 'Current CTC per Annum',
-        'Expected CTC per Annum', 'Total Years of Experience', 'Notice Period',
-        'Interview Status', 'Application Status', 'Referred By', 'Comments',
-        'In Notice', 'Immediate Joiner', 'Offers in Hand', 'Offered CTC',
-        'Location Preference', 'Certifications', 'Resume', 'LinkedIn Profile',
-        # Stage-specific remarks that should be persisted
-        'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks',
-        # General/legacy remarks
-        'Remarks', 'Reject Mail Sent', 'Final Remarks', 'Month Count'
-    ]
-    
-    # Build ordered headers: Date + desired fields present + any remaining headers
-    ordered_headers = []
-    if 'Date' in headers:
-        ordered_headers.append('Date')
-    ordered_headers.extend([h for h in desired_fields if h in headers])
-    # Include any headers not in desired list (e.g., 'Reference')
-    ordered_headers.extend([h for h in headers if h not in ordered_headers])
-    
-    # If there are desired fields missing from headers, append them so they are created
-    ordered_headers.extend([h for h in desired_fields if h not in ordered_headers])
-    
-    # Rewrite headers in desired order
-    for col_num, header in enumerate(ordered_headers, 1):
-        sheet.cell(row=1, column=col_num).value = header
-    
-    # Clear existing data (except headers)
-    for row in range(sheet.max_row, 1, -1):
-        sheet.delete_rows(row)
-    
-    # Add updated data
-    for row_num, row_data in enumerate(data, 2):
+        # Get current headers
+        headers = [cell.value for cell in sheet[1] if cell.value]
+        
+        # Desired field order (keep 'Date' at the beginning)
+        desired_fields = [
+            'Name', 'Email ID', 'Contact Number', 'Interested Position', 'Current Role',
+            'Current Organization', 'Current Location', 'Current CTC per Annum',
+            'Expected CTC per Annum', 'Total Years of Experience', 'Notice Period',
+            'Interview Status', 'Application Status', 'Referred By', 'Comments',
+            'In Notice', 'Immediate Joiner', 'Offers in Hand', 'Offered CTC',
+            'Location Preference', 'Certifications', 'Resume', 'LinkedIn Profile',
+            # Stage-specific remarks that should be persisted
+            'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks',
+            # General/legacy remarks
+            'Remarks', 'Reject Mail Sent', 'Final Remarks', 'Month Count'
+        ]
+        
+        # Build ordered headers: Date + desired fields present + any remaining headers
+        ordered_headers = []
+        if 'Date' in headers:
+            ordered_headers.append('Date')
+        ordered_headers.extend([h for h in desired_fields if h in headers])
+        # Include any headers not in desired list (e.g., 'Reference')
+        ordered_headers.extend([h for h in headers if h not in ordered_headers])
+        
+        # If there are desired fields missing from headers, append them so they are created
+        ordered_headers.extend([h for h in desired_fields if h not in ordered_headers])
+        
+        # Rewrite headers in desired order
         for col_num, header in enumerate(ordered_headers, 1):
-            # Migrate old "Initial Remarks" to "Initial Screening"
-            if header == 'Initial Screening':
-                value = row_data.get('Initial Screening') or row_data.get('Initial Remarks', '')
-            else:
-                value = row_data.get(header, '')
-            sheet.cell(row=row_num, column=col_num).value = value
-    
-    # Save the workbook
-    wb.save(EXCEL_FILE)
+            sheet.cell(row=1, column=col_num).value = header
+        
+        # Clear existing data (except headers)
+        for row in range(sheet.max_row, 1, -1):
+            sheet.delete_rows(row)
+        
+        # Add updated data
+        for row_num, row_data in enumerate(data, 2):
+            for col_num, header in enumerate(ordered_headers, 1):
+                # Migrate old "Initial Remarks" to "Initial Screening"
+                if header == 'Initial Screening':
+                    value = row_data.get('Initial Screening') or row_data.get('Initial Remarks', '')
+                else:
+                    value = row_data.get(header, '')
+                # Convert value to string, handle None
+                if value is None:
+                    value = ''
+                else:
+                    value = str(value)
+                sheet.cell(row=row_num, column=col_num).value = value
+        
+        # Save and close the workbook
+        wb.save(EXCEL_FILE)
+        wb.close()
+        print(f"Data saved to Excel: {len(data)} records")
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in save_data: {error_trace}")
+        raise
 
 # Initialize user database
 def init_user_db():
@@ -402,17 +403,21 @@ def update_data(index):
                 # Convert specific fields to appropriate types if necessary
                 if key in ['Current CTC per Annum', 'Expected CTC per Annum', 'Offered CTC']:
                     try:
-                        data[index][key] = int(value)
+                        data[index][key] = int(value) if value else ''
                     except (ValueError, TypeError):
                         data[index][key] = value  # Keep original if conversion fails
                 else:
-                    data[index][key] = value
+                    # Ensure all values are strings or None
+                    data[index][key] = str(value) if value is not None else ''
             
             save_data(data)
             return jsonify({"status": "success", "message": "Data updated successfully"})
         else:
             return jsonify({"status": "error", "message": f"No record found at index {index}"}), 404
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error updating data: {error_trace}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/data/<int:index>', methods=['DELETE'])
