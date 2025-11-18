@@ -19,7 +19,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c3e50; /* Dark blue/grey background */
             background-attachment: fixed;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
@@ -213,83 +213,86 @@
         }
 
         /* Ensure row backgrounds work with sticky columns - row colors take precedence */
-        .table tbody tr.row-accepted td.sticky-column {
-            background-color: #d1fae5 !important;
-        }
-
-        .table tbody tr.row-accepted:hover td.sticky-column {
-            background-color: #a7f3d0 !important;
-        }
-
-        .table tbody tr.row-rejected td.sticky-column {
-            background-color: #f97070 !important;
-        }
-
-        .table tbody tr.row-rejected:hover td.sticky-column {
-            background-color: #f97070 !important;
-        }
-
-        .table tbody tr.row-onhold td.sticky-column {
-            background-color: #6fa8f3 !important;
-        }
-
-        .table tbody tr.row-onhold:hover td.sticky-column {
-            background-color: #6fa8f3 !important;
-        }
-
-        .table tbody tr.row-proceed td.sticky-column {
-            background-color: #fef3c7 !important;
-        }
-
-        .table tbody tr.row-proceed:hover td.sticky-column {
-            background-color: #fde68a !important;
-        }
-
-        .table tbody tr:hover:not(.row-accepted):not(.row-rejected):not(.row-onhold):not(.row-proceed) td.sticky-column {
-            background-color: #f8fafc !important;
-        }
-
-        .table tbody tr {
-            transition: all 0.15s ease;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
         .table tbody tr:hover {
             background-color: #f8fafc;
             transform: scale(1.002);
         }
-
-        /* Row color based on Application Status */
-        .table tbody tr.row-accepted {
-            background-color: #d1fae5 !important; /* Light green */
+        
+        /* Ensure hover effect works properly with sticky columns */
+        .table tbody tr:hover td.sticky-column {
+            background-color: #f8fafc !important;
         }
 
-        .table tbody tr.row-accepted:hover {
-            background-color: #a7f3d0 !important; /* Medium green on hover */
+        /* Application Status cell colors - For all specific statuses */
+        td[data-column='Application Status'] select.status-onhold {
+            background-color: #c084fc !important; /* Purple color for On Hold */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
         }
-
-        .table tbody tr.row-rejected {
-            background-color: #f97070 !important; /* Light red */
+        
+        td[data-column='Application Status'] select.status-joined {
+            background-color: #3b82f6 !important; /* Blue color for Joined */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
         }
-
-        .table tbody tr.row-rejected:hover {
-            background-color: #f97070 !important; /* Medium red on hover */
+        
+        td[data-column='Application Status'] select.status-accepted {
+            background-color: #10b981 !important; /* Green color for Accepted */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
         }
-
-        .table tbody tr.row-onhold {
-            background-color: #6fa8f3 !important; /* Light blue */
+        
+        td[data-column='Application Status'] select.status-rejected {
+            background-color: #ef4444 !important; /* Red color for Rejected */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
         }
-
-        .table tbody tr.row-onhold:hover {
-            background-color: #6fa8f3 !important; /* Medium blue on hover */
+        
+        td[data-column='Application Status'] select.status-proceed {
+            background-color: #f59e0b !important; /* Amber color for Proceed Further */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
         }
-
-        .table tbody tr.row-proceed {
-            background-color: #fef3c7 !important; /* Light yellow */
+        
+        /* Individual option colors */
+        td[data-column='Application Status'] select option[data-status='On Hold'] {
+            background-color: #c084fc !important; /* Purple color for On Hold */
+            color: white;
         }
-
-        .table tbody tr.row-proceed:hover {
-            background-color: #fde68a !important; /* Medium yellow on hover */
+        
+        td[data-column='Application Status'] select option[data-status='Joined'] {
+            background-color: #3b82f6 !important; /* Blue color for Joined */
+            color: white;
+        }
+        
+        td[data-column='Application Status'] select option[data-status='Accepted'] {
+            background-color: #10b981 !important; /* Green color for Accepted */
+            color: white;
+        }
+        
+        td[data-column='Application Status'] select option[data-status='Rejected'] {
+            background-color: #ef4444 !important; /* Red color for Rejected */
+            color: white;
+        }
+        
+        td[data-column='Application Status'] select option[data-status='Proceed Further'] {
+            background-color: #f59e0b !important; /* Amber color for Proceed Further */
+            color: white;
         }
 
         .table td {
@@ -705,12 +708,14 @@
             }
         });
     </script>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand" href="#">
-                <img src="/static/images/Screenshot 2025-11-17 105428.png" alt="GuhaTek Logo" style="height: 70px; background: white; padding: 12px 24px; border-radius: 4px; margin-right: 1.5rem;">
-                Candidate Tracking System
-            </a>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="padding: 0.3rem 1rem;">
+        <div class="container-fluid px-2">
+            <div class="d-flex align-items-center">
+                <img src="/static/images/GuhaTekHorizontalLarge.svg" alt="GuhaTek Logo" style="height: 30px; margin-right: 1rem;">
+            </div>
+            <div class="d-flex align-items-center ms-3">
+                <span class="navbar-brand mb-0">Candidate Tracking System</span>
+            </div>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -754,10 +759,10 @@
                         <div class="card shadow-sm">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                    <h5 class="mb-0 d-flex align-items-center">
+                                    <h4 class="mb-0 d-flex align-items-center">
                                         <i class="bi bi-clipboard-data me-2"></i>
                                         Candidate Management
-                                    </h5>
+                                    </h4>
                                     <button id="addCandidateBtn" class="btn btn-primary" onclick="openAddModal()" style="display: none;">
                                         <i class="bi bi-plus-circle-fill me-2"></i>Add New Candidate
                                     </button>
@@ -916,44 +921,6 @@
 
                 <!-- Position-wise Analytics -->
                 <div class="row">
-                <!-- Location Analytics -->
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="card shadow-sm">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-geo-alt-fill me-2"></i>
-                                    Current Location Distribution
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="currentLocationChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CTC Analysis -->
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="card shadow-sm">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-currency-dollar me-2"></i>
-                                    CTC Comparison (Current vs Expected vs Offered)
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="ctcComparisonChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
 
             </div>
         </div>

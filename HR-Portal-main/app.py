@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, render_template, redirect, url_for, s
 from flask_cors import CORS
 import os
 import openpyxl
+from openpyxl.cell.cell import MergedCell
 from datetime import datetime
 import random
 import json
@@ -29,7 +30,8 @@ def create_sample_excel():
 
     wb = openpyxl.Workbook()
     sheet = wb.active
-    sheet.title = SHEET_NAME
+    if sheet is not None:
+        sheet.title = SHEET_NAME
     
     # Define headers
     headers = [
@@ -49,7 +51,11 @@ def create_sample_excel():
     
     # Add headers to the first row
     for col_num, header in enumerate(headers, 1):
-        sheet.cell(row=1, column=col_num).value = header
+        if sheet is not None:
+            cell = sheet.cell(row=1, column=col_num)
+            # Check if cell is not a merged cell before assigning value
+            if cell is not None and not isinstance(cell, MergedCell):
+                cell.value = header
         
         # Sample data
         sample_data = [
@@ -159,7 +165,11 @@ def create_sample_excel():
         # Add sample data
         for row_num, data in enumerate(sample_data, 2):
             for col_num, header in enumerate(headers, 1):
-                sheet.cell(row=row_num, column=col_num).value = data.get(header, '')
+                if sheet is not None:
+                    cell = sheet.cell(row=row_num, column=col_num)
+                    # Check if cell is not a merged cell before assigning value
+                    if cell is not None and not isinstance(cell, MergedCell):
+                        cell.value = data.get(header, '')
         
         # Save the workbook
         wb.save(EXCEL_FILE)
@@ -175,7 +185,7 @@ def load_data():
     sheet = wb[SHEET_NAME]
     
     # Get headers from the first row
-    headers = [cell.value for cell in sheet[1]]
+    headers = [cell.value for cell in sheet[1] if cell is not None]
     
     # Get data from the remaining rows
     data = []
@@ -204,7 +214,7 @@ def save_data(data):
         sheet = wb[SHEET_NAME]
 
         # Get current headers
-        headers = [cell.value for cell in sheet[1] if cell.value]
+        headers = [cell.value for cell in sheet[1] if cell is not None and cell.value]
         
         # Desired field order (keep 'Date' at the beginning)
         desired_fields = [
@@ -233,7 +243,10 @@ def save_data(data):
         
         # Rewrite headers in desired order
         for col_num, header in enumerate(ordered_headers, 1):
-            sheet.cell(row=1, column=col_num).value = header
+            if sheet is not None:
+                cell = sheet.cell(row=1, column=col_num)
+                if cell is not None and not isinstance(cell, MergedCell):
+                    cell.value = header
         
         # Clear existing data (except headers)
         for row in range(sheet.max_row, 1, -1):
@@ -252,7 +265,10 @@ def save_data(data):
                     value = ''
                 else:
                     value = str(value)
-                sheet.cell(row=row_num, column=col_num).value = value
+                if sheet is not None:
+                    cell = sheet.cell(row=row_num, column=col_num)
+                    if cell is not None and not isinstance(cell, MergedCell):
+                        cell.value = value
         
         # Save and close the workbook
         wb.save(EXCEL_FILE)
@@ -469,7 +485,7 @@ def get_analytics():
             if date_str:
                 try:
                     # Assuming date format is 'YYYY-MM-DD' or similar
-                    date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+                    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
                     month_year = date_obj.strftime('%b %Y') # e.g., 'Nov 2025'
                     monthly_stats[month_year]["applicants"] += 1
                     if item.get('Application Status') == 'Accepted':
@@ -486,7 +502,7 @@ def get_analytics():
         
         # Sort monthly statistics by date
         sorted_monthly_stats = []
-        for month_year in sorted(monthly_stats.keys(), key=lambda x: datetime.datetime.strptime(x, '%b %Y')):
+        for month_year in sorted(monthly_stats.keys(), key=lambda x: datetime.strptime(x, '%b %Y')):
             stats = monthly_stats[month_year]
             sorted_monthly_stats.append({
                 "month": month_year,

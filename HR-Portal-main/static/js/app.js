@@ -127,8 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateMonthlyStats(tableData);
                     updateApplicationStatusChart(tableData);
                     // updatePositionChart(tableData); // Removed
-                    updateCurrentLocationChart(tableData);
-                    updateCTCComparisonChart(tableData);
                 }
             }
         });
@@ -360,10 +358,6 @@ if (field === 'Timestamp' && candidate[field]) {
     modal.show();
 }
 
-
-
-
-
 // Function to get status badge class
 function getStatusBadgeClass(status) {
     switch(status) {
@@ -373,6 +367,18 @@ function getStatusBadgeClass(status) {
         case 'Rejected': return 'bg-danger';
         case 'Selected': return 'bg-info';
         default: return 'bg-primary';
+    }
+}
+
+// Function to get status class for Application Status cell coloring
+function getStatusClass(status) {
+    switch(status) {
+        case 'Accepted': return 'status-accepted';
+        case 'Rejected': return 'status-rejected';
+        case 'On Hold': return 'status-onhold';
+        case 'Proceed Further': return 'status-proceed';
+        case 'Joined': return 'status-joined';
+        default: return '';
     }
 }
 
@@ -405,7 +411,14 @@ function populateStatusFilterOptions() {
     const previousValue = statusFilter.value;
     const statusOptions = dropdownOptions['Application Status'] || PREDEFINED_DROPDOWNS['Application Status'] || [];
 
+    // Clear the dropdown and add a default "All Application Statuses" option
     statusFilter.innerHTML = '<option value=\"\">All Application Statuses</option>';
+    
+    // Add an empty option that appears as a blank selection
+    const emptyOption = document.createElement('option');
+    emptyOption.value = 'EMPTY';  // Distinct value for empty option
+    emptyOption.textContent = '(Empty)';  // Label for the empty option
+    statusFilter.appendChild(emptyOption);
 
     statusOptions.forEach(option => {
         const optionElement = document.createElement('option');
@@ -497,8 +510,21 @@ function applyTableFilters() {
         .filter(row => {
             const interestedPosition = row['Interested Position'] || '';
             const applicationStatus = row['Application Status'] || '';
+            
             const matchesPosition = !hasPositionFilter || interestedPosition === selectedPosition;
-            const matchesStatus = !hasStatusFilter || applicationStatus === selectedStatus;
+            
+            // Handle the EMPTY option for application status
+            let matchesStatus = true;
+            if (hasStatusFilter) {
+                if (selectedStatus === 'EMPTY') {
+                    // Match rows where Application Status is empty/null/undefined
+                    matchesStatus = !applicationStatus || applicationStatus === '';
+                } else {
+                    // Normal matching for other status values
+                    matchesStatus = applicationStatus === selectedStatus;
+                }
+            }
+            
             return matchesPosition && matchesStatus;
         });
 
@@ -608,7 +634,8 @@ function populateTable(data, isAdmin) {
             tr.dataset.index = index;
             tr.style.cursor = 'pointer'; // Add pointer cursor to indicate clickable
             
-            // Apply row color based on Application Status
+            // Apply row color based on Application Status - REMOVED
+            /*
             const applicationStatus = row['Application Status'] || '';
             if (applicationStatus === 'Accepted') {
                 tr.classList.add('row-accepted');
@@ -619,6 +646,7 @@ function populateTable(data, isAdmin) {
             } else if (applicationStatus === 'Proceed Further') {
                 tr.classList.add('row-proceed');
             }
+            */
             
             // Add click event to show candidate details
             tr.addEventListener('click', (e) => {
@@ -671,6 +699,23 @@ function populateTable(data, isAdmin) {
 
                     const select = document.createElement('select');
                     select.className = 'form-select';
+                    
+                    // Apply status-specific class for Application Status to the select element
+                    // Only apply colors for specific statuses, others remain normal
+                    if (column === 'Application Status') {
+                        if (currentStatus === 'On Hold') {
+                            select.classList.add('status-onhold');
+                        } else if (currentStatus === 'Joined') {
+                            select.classList.add('status-joined');
+                        } else if (currentStatus === 'Proceed Further') {
+                            select.classList.add('status-proceed');
+                        } else if (currentStatus === 'Rejected') {
+                            select.classList.add('status-rejected');
+                        } else if (currentStatus === 'Accepted') {
+                            select.classList.add('status-accepted');
+                        }
+                        // All other statuses will remain with default styling
+                    }
 
                     const statusOptions = dropdownOptions[column] || [];
                     
@@ -686,11 +731,21 @@ function populateTable(data, isAdmin) {
                         select.appendChild(emptyOption);
                     }
                     
+                    // Add empty option for Application Status
+                    if (column === 'Application Status') {
+                        const emptyOption = document.createElement('option');
+                        emptyOption.value = '';
+                        emptyOption.textContent = '(Empty)';
+                        select.appendChild(emptyOption);
+                    }
+                    
                     if (statusOptions.length > 0) {
                         statusOptions.forEach(option => {
                             const optionElement = document.createElement('option');
                             optionElement.value = option;
                             optionElement.textContent = option;
+                            // Add data attribute for styling individual options
+                            optionElement.setAttribute('data-status', option);
                             // Only select if it matches current status and current status is not empty
                             if (option === currentStatus && currentStatus && currentStatus !== '') {
                                 optionElement.selected = true;
@@ -702,6 +757,7 @@ function populateTable(data, isAdmin) {
                             const optionElement = document.createElement('option');
                             optionElement.value = currentStatus;
                             optionElement.textContent = currentStatus;
+                            optionElement.setAttribute('data-status', currentStatus);
                             optionElement.selected = true;
                             select.appendChild(optionElement);
                         }
@@ -711,6 +767,7 @@ function populateTable(data, isAdmin) {
                         optionElement.value = currentStatus || '';
                         optionElement.textContent = currentStatus || 'Select status';
                         if (currentStatus) {
+                            optionElement.setAttribute('data-status', currentStatus || '');
                             optionElement.selected = true;
                         }
                         select.appendChild(optionElement);
@@ -725,20 +782,26 @@ function populateTable(data, isAdmin) {
                         // Find the correct index to use for update
                         const recordIndex = getRecordIndex(row);
                         
-                        // Update row color immediately based on Application Status
+                        // Update select element color immediately based on Application Status
+                        // Only apply colors for specific statuses, others remain normal
                         if (column === 'Application Status') {
                             // Remove existing status classes
-                            rowElement.classList.remove('row-accepted', 'row-rejected', 'row-onhold', 'row-proceed');
-                            // Add new status class
-                            if (newStatus === 'Accepted') {
-                                rowElement.classList.add('row-accepted');
-                            } else if (newStatus === 'Rejected') {
-                                rowElement.classList.add('row-rejected');
-                            } else if (newStatus === 'On Hold') {
-                                rowElement.classList.add('row-onhold');
+                            const statusClasses = ['status-onhold', 'status-joined', 'status-proceed', 'status-rejected', 'status-accepted'];
+                            statusClasses.forEach(cls => select.classList.remove(cls));
+                            
+                            // Add new status class for specific statuses
+                            if (newStatus === 'On Hold') {
+                                select.classList.add('status-onhold');
+                            } else if (newStatus === 'Joined') {
+                                select.classList.add('status-joined');
                             } else if (newStatus === 'Proceed Further') {
-                                rowElement.classList.add('row-proceed');
+                                select.classList.add('status-proceed');
+                            } else if (newStatus === 'Rejected') {
+                                select.classList.add('status-rejected');
+                            } else if (newStatus === 'Accepted') {
+                                select.classList.add('status-accepted');
                             }
+                            // All other statuses will remain with default styling
                         }
                         
                         // Update status with error handling to revert color if update fails
@@ -858,7 +921,7 @@ function populateTable(data, isAdmin) {
             updateStickyColumnPositions();
         }, 0);
         
-        updateGroupByOptions();
+        // updateGroupByOptions(); // Removed as function is not defined
     } else {
         console.log('No data available to populate table');
         tableHead.innerHTML = '<tr><th colspan="100%">No data available</th></tr>';
@@ -890,17 +953,23 @@ function updateRecordStatus(index, column, newStatus, rowElement = null, oldStat
             tableData[index][column] = newStatus; // Update local data to avoid full refresh
         } else {
             showNotification(data.message || 'Failed to update status.', 'error');
-            // Revert row color if update failed and we have the row element
+            // Revert cell color if update failed and we have the cell element
             if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
-                rowElement.classList.remove('row-accepted', 'row-rejected', 'row-onhold', 'row-proceed');
-                if (oldStatus === 'Accepted') {
-                    rowElement.classList.add('row-accepted');
-                } else if (oldStatus === 'Rejected') {
-                    rowElement.classList.add('row-rejected');
-                } else if (oldStatus === 'On Hold') {
-                    rowElement.classList.add('row-onhold');
-                } else if (oldStatus === 'Proceed Further') {
-                    rowElement.classList.add('row-proceed');
+                // Find the Application Status cell and select element
+                const statusCell = rowElement.querySelector("td[data-column='Application Status']");
+                if (statusCell) {
+                    const selectElement = statusCell.querySelector('select');
+                    if (selectElement) {
+                        // Remove existing status classes
+                        const statusClasses = ['status-accepted', 'status-rejected', 'status-onhold', 'status-proceed', 'status-joined'];
+                        statusClasses.forEach(cls => selectElement.classList.remove(cls));
+                        
+                        // Add old status class
+                        const oldStatusClass = getStatusClass(oldStatus);
+                        if (oldStatusClass) {
+                            selectElement.classList.add(oldStatusClass);
+                        }
+                    }
                 }
             }
             fetchData(); // Revert change on failure
@@ -909,58 +978,27 @@ function updateRecordStatus(index, column, newStatus, rowElement = null, oldStat
     .catch(error => {
         console.error('Error updating record:', error);
         showNotification('Error updating record', 'error');
-        // Revert row color if update failed and we have the row element
+        // Revert cell color if update failed and we have the cell element
         if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
-            rowElement.classList.remove('row-accepted', 'row-rejected', 'row-onhold', 'row-proceed');
-            if (oldStatus === 'Accepted') {
-                rowElement.classList.add('row-accepted');
-            } else if (oldStatus === 'Rejected') {
-                rowElement.classList.add('row-rejected');
-            } else if (oldStatus === 'On Hold') {
-                rowElement.classList.add('row-onhold');
-            } else if (oldStatus === 'Proceed Further') {
-                rowElement.classList.add('row-proceed');
+            // Find the Application Status cell
+            const statusCell = rowElement.querySelector("td[data-column='Application Status']");
+            if (statusCell) {
+                // Remove existing status classes
+                const statusClasses = ['status-accepted', 'status-rejected', 'status-onhold', 'status-proceed', 'status-joined'];
+                statusClasses.forEach(cls => statusCell.classList.remove(cls));
+                
+                // Add old status class
+                const oldStatusClass = getStatusClass(oldStatus);
+                if (oldStatusClass) {
+                    statusCell.classList.add(oldStatusClass);
+                }
             }
         }
         fetchData(); // Revert change on failure
     });
 }
 
-// Update group by options for analysis
-function updateGroupByOptions() {
-    const groupBySelect = document.getElementById('groupByColumn');
-    if (!groupBySelect) {
-        return; // Dropdown removed; skip populating options
-    }
-    groupBySelect.innerHTML = '';
-    
-    tableColumns.forEach(column => {
-        if (column !== 'Date' && 
-            column !== 'Email ID' && 
-            column !== 'Contact Number' && 
-            column !== 'Current CTC per Annum' && 
-            column !== 'Expected CTC per Annum' && 
-            column !== 'Offered CTC' && 
-            column !== 'Resume' && 
-            column !== 'LinkedIn Profile' && 
-            column !== 'Comments' && 
-            column !== 'Remarks' && 
-            column !== 'Final Remarks' &&
-            column !== 'Initial Screening' && 
-            column !== 'Round 1 Remarks' && 
-            column !== 'Round 2 Remarks') {
-            
-            const option = document.createElement('option');
-            option.value = column;
-            option.textContent = column;
-            groupBySelect.appendChild(option);
-        }
-    });
-    
-    if (groupBySelect.options.length > 0) {
-        fetchGroupAnalysis(groupBySelect.options[0].value);
-    }
-}
+
 
 // Function to populate form fields for add/edit modals
 function populateFormFields(formId, data = null) {
@@ -1964,9 +2002,7 @@ function updateOverallDistributionChart(data) {
 
 // Chart instances for new analytics
 let interviewStatusChart = null;
-let currentLocationChart = null;
 let locationPreferenceChart = null;
-let ctcComparisonChart = null;
 let experienceChart = null;
 let referralSourceChart = null;
 let noticePeriodChart = null;
@@ -2007,179 +2043,6 @@ function updateInterviewStatusChart(data) {
             plugins: {
                 legend: {
                     position: 'right'
-                }
-            }
-        }
-    });
-}
-
-// Current Location Chart
-function updateCurrentLocationChart(data) {
-    const locationCounts = {};
-    
-    data.forEach(candidate => {
-        const location = candidate['Current Location'] || 'Not Specified';
-        locationCounts[location] = (locationCounts[location] || 0) + 1;
-    });
-    
-    const ctx = document.getElementById('currentLocationChart');
-    if (!ctx) return;
-    
-    if (currentLocationChart) {
-        currentLocationChart.destroy();
-    }
-    
-    currentLocationChart = new Chart(ctx.getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(locationCounts),
-            datasets: [{
-                data: Object.values(locationCounts),
-                backgroundColor: [
-                    '#4f46e5', '#10b981', '#ef4444', '#f59e0b', '#3b82f6',
-                    '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right'
-                }
-            }
-        }
-    });
-}
-
-// Location Preference Chart
-function updateLocationPreferenceChart(data) {
-    const locationCounts = {};
-    
-    data.forEach(candidate => {
-        const location = candidate['Location Preference'] || 'Not Specified';
-        locationCounts[location] = (locationCounts[location] || 0) + 1;
-    });
-    
-    const ctx = document.getElementById('locationPreferenceChart');
-    if (!ctx) return;
-    
-    if (locationPreferenceChart) {
-        locationPreferenceChart.destroy();
-    }
-    
-    locationPreferenceChart = new Chart(ctx.getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(locationCounts),
-            datasets: [{
-                data: Object.values(locationCounts),
-                backgroundColor: [
-                    '#4f46e5', '#10b981', '#ef4444', '#f59e0b', '#3b82f6',
-                    '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right'
-                }
-            }
-        }
-    });
-}
-
-// CTC Comparison Chart
-function updateCTCComparisonChart(data) {
-    const currentCTC = [];
-    const expectedCTC = [];
-    const offeredCTC = [];
-    
-    data.forEach(candidate => {
-        const current = parseFloat(candidate['Current CTC per Annum']) || 0;
-        const expected = parseFloat(candidate['Expected CTC per Annum']) || 0;
-        const offered = parseFloat(candidate['Offered CTC']) || 0;
-        
-        if (current > 0) currentCTC.push(current);
-        if (expected > 0) expectedCTC.push(expected);
-        if (offered > 0) offeredCTC.push(offered);
-    });
-    
-    const calculateStats = (arr) => {
-        if (arr.length === 0) return { avg: 0, min: 0, max: 0 };
-        return {
-            avg: arr.reduce((a, b) => a + b, 0) / arr.length,
-            min: Math.min(...arr),
-            max: Math.max(...arr)
-        };
-    };
-    
-    const currentStats = calculateStats(currentCTC);
-    const expectedStats = calculateStats(expectedCTC);
-    const offeredStats = calculateStats(offeredCTC);
-    
-    const ctx = document.getElementById('ctcComparisonChart');
-    if (!ctx) return;
-    
-    if (ctcComparisonChart) {
-        ctcComparisonChart.destroy();
-    }
-    
-    ctcComparisonChart = new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Average', 'Minimum', 'Maximum'],
-            datasets: [
-                {
-                    label: 'Current CTC',
-                    data: [currentStats.avg, currentStats.min, currentStats.max],
-                    backgroundColor: 'rgba(79, 70, 229, 0.6)',
-                    borderColor: 'rgba(79, 70, 229, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Expected CTC',
-                    data: [expectedStats.avg, expectedStats.min, expectedStats.max],
-                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Offered CTC',
-                    data: [offeredStats.avg, offeredStats.min, offeredStats.max],
-                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                    borderColor: 'rgba(239, 68, 68, 1)',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN');
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₹' + value.toLocaleString('en-IN');
-                        }
-                    }
                 }
             }
         }
@@ -2465,8 +2328,6 @@ async function refreshData() {
             updateApplicationStatusChart(data.data);
             // Update remaining analytics charts
             // updatePositionChart(data.data); // Removed
-            updateCurrentLocationChart(data.data);
-            updateCTCComparisonChart(data.data);
         }
     } catch (error) {
         console.error('Error refreshing data:', error);
