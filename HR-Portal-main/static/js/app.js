@@ -62,6 +62,10 @@ const PREDEFINED_DROPDOWNS = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    // Only fetch analytics data if on the analytics page
+    if (window.location.pathname === '/analytics') {
+        fetchAnalyticsData();
+    }
     // Load dropdown options first
     fetchDropdownOptions().then(() => {
         populateStatusFilterOptions();
@@ -122,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (tableData && tableData.length > 0) {
                     updateMonthlyStats(tableData);
                     updateApplicationStatusChart(tableData);
-                    updatePositionChart(tableData);
+                    // updatePositionChart(tableData); // Removed
                     updateCurrentLocationChart(tableData);
                     updateCTCComparisonChart(tableData);
                 }
@@ -1332,6 +1336,85 @@ function fetchSummary() {
         });
 }
 
+// Function to fetch analytics data
+function fetchAnalyticsData() {
+    fetch('/api/analytics')
+        .then(response => response.json())
+        .then(data => {
+            displayAnalyticsData(data);
+        })
+        .catch(error => {
+            console.error('Error fetching analytics data:', error);
+        });
+}
+
+// Function to display analytics data
+function displayAnalyticsData(data) {
+    const overallAnalyticsBody = document.getElementById('overallAnalyticsBody');
+    const hiringFunnelBody = document.getElementById('hiringFunnelBody');
+
+    if (!overallAnalyticsBody || !hiringFunnelBody) {
+        console.error('Analytics tables not found.');
+        return;
+    }
+
+    // Clear existing content
+    overallAnalyticsBody.innerHTML = '';
+    hiringFunnelBody.innerHTML = '';
+
+    // Populate Overall Analytics Table
+    overallAnalyticsBody.innerHTML = `
+        <tr>
+            <td>Total Applicant</td>
+            <td>${data.total_applicant}</td>
+        </tr>
+        <tr>
+            <td>Total Rejected</td>
+            <td>${data.total_rejected}</td>
+        </tr>
+        <tr>
+            <td>No response</td>
+            <td>${data.no_response}</td>
+        </tr>
+        <tr>
+            <td>Not Interviewed</td>
+            <td>${data.not_interviewed}</td>
+        </tr>
+    `;
+
+    // Populate Hiring Funnel Table
+    hiringFunnelBody.innerHTML = `
+        <tr>
+            <td>Total Round 2 Completed</td>
+            <td>${data.total_round_2_completed}</td>
+        </tr>
+        <tr>
+            <td>Didn't Join</td>
+            <td>${data.did_not_join}</td>
+        </tr>
+        <tr>
+            <td>On Hold</td>
+            <td>${data.on_hold}</td>
+        </tr>
+        <tr>
+            <td>Accepted waiting Reference</td>
+            <td>${data.accepted_waiting_reference}</td>
+        </tr>
+        <tr>
+            <td>Total In Notice/Yet to join</td>
+            <td>${data.total_in_notice_yet_to_join}</td>
+        </tr>
+        <tr>
+            <td>Total Joined</td>
+            <td>${data.total_joined}</td>
+        </tr>
+        <tr>
+            <td>Intern</td>
+            <td>${data.intern}</td>
+        </tr>
+    `;
+}
+
 // Display summary data
 function displaySummary(data) {
     const summaryContainer = document.getElementById('summaryContainer');
@@ -1553,6 +1636,59 @@ function updateMonthlyStats(data) {
     
     // Update key metrics
     updateKeyMetrics(totals, data);
+    
+    // Update position statistics
+    updatePositionStats(data);
+}
+
+// Update Position Statistics Table
+function updatePositionStats(data) {
+    const positionStats = {};
+    
+    // Count applicants and joined by position
+    data.forEach(candidate => {
+        const position = candidate['Interested Position'] || 'Not Specified';
+        
+        if (!positionStats[position]) {
+            positionStats[position] = {
+                applied: 0,
+                joined: 0
+            };
+        }
+        
+        positionStats[position].applied++;
+        
+        if (candidate['Application Status'] === 'Joined') {
+            positionStats[position].joined++;
+        }
+    });
+    
+    // Sort positions by number of applicants (descending)
+    const sortedPositions = Object.keys(positionStats).sort((a, b) => {
+        return positionStats[b].applied - positionStats[a].applied;
+    });
+    
+    // Update table
+    const tbody = document.getElementById('positionStatsBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (sortedPositions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No position data available</td></tr>';
+        return;
+    }
+    
+    sortedPositions.forEach(position => {
+        const stats = positionStats[position];
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="font-weight: 500; color: #1f2937;">${position}</td>
+            <td style="text-align: center; font-weight: 600; color: #5b5fef;">${stats.applied}</td>
+            <td style="text-align: center; font-weight: 600; color: #10b981;">${stats.joined}</td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 function updateKeyMetrics(totals, data) {
@@ -1827,7 +1963,6 @@ function updateOverallDistributionChart(data) {
 }
 
 // Chart instances for new analytics
-let positionChart = null;
 let interviewStatusChart = null;
 let currentLocationChart = null;
 let locationPreferenceChart = null;
@@ -1837,63 +1972,6 @@ let referralSourceChart = null;
 let noticePeriodChart = null;
 let monthlyTrendsChart = null;
 
-// Position-wise Analytics Chart
-function updatePositionChart(data) {
-    const positionCounts = {};
-    
-    data.forEach(candidate => {
-        const position = candidate['Interested Position'] || 'Not Specified';
-        positionCounts[position] = (positionCounts[position] || 0) + 1;
-    });
-    
-    const sortedPositions = Object.entries(positionCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10); // Top 10 positions
-    
-    const ctx = document.getElementById('positionChart');
-    if (!ctx) return;
-    
-    if (positionChart) {
-        positionChart.destroy();
-    }
-    
-    positionChart = new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: sortedPositions.map(p => p[0]),
-            datasets: [{
-                label: 'Candidates',
-                data: sortedPositions.map(p => p[1]),
-                backgroundColor: 'rgba(79, 70, 229, 0.6)',
-                borderColor: 'rgba(79, 70, 229, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                },
-                x: {
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45
-                    }
-                }
-            }
-        }
-    });
-}
 
 // Interview Status Pie Chart
 function updateInterviewStatusChart(data) {
@@ -2386,7 +2464,7 @@ async function refreshData() {
             updateMonthlyStats(data.data);
             updateApplicationStatusChart(data.data);
             // Update remaining analytics charts
-            updatePositionChart(data.data);
+            // updatePositionChart(data.data); // Removed
             updateCurrentLocationChart(data.data);
             updateCTCComparisonChart(data.data);
         }

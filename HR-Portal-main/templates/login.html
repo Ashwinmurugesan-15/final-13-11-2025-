@@ -13,42 +13,101 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(180deg, #143ea8 0%, #0b2458 60%, #000000 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
             color: #1f2937;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }
+        
+        @keyframes moveBackground {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
         }
         .login-container {
-            max-width: 420px;
-            padding: 28px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            max-width: 450px;
+            padding: 3rem 2.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .login-header {
             text-align: center;
             margin-bottom: 30px;
         }
         .login-header h2 {
-            color: #1d4ed8;
-            font-weight: 700;
-            margin-bottom: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            margin-bottom: 8px;
+            font-size: 2rem;
         }
         .login-subtitle {
             color: #6b7280;
             font-size: 0.95rem;
         }
         .form-control {
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            outline: none;
         }
         .btn-login {
-            padding: 12px;
-            background-color: #2563eb;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             width: 100%;
-            font-weight: 600;
-            margin-top: 8px;
+            font-weight: 700;
+            margin-top: 12px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
         .alert {
             margin-bottom: 20px;
@@ -59,8 +118,16 @@
         }
         .input-group-text {
             background-color: #f3f4f6;
-            border-radius: 0 8px 8px 0;
+            border-radius: 0 12px 12px 0;
             cursor: pointer;
+            border: 2px solid #e5e7eb;
+            border-left: none;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group-text:hover {
+            background-color: #667eea;
+            color: white;
         }
     </style>
 </head>

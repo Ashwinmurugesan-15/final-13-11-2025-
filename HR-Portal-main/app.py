@@ -5,6 +5,7 @@ import openpyxl
 from datetime import datetime
 import random
 import json
+from collections import defaultdict
 import secrets
 import sqlite3
 import hashlib
@@ -437,73 +438,101 @@ def delete_data(index):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/api/analysis/summary', methods=['GET'])
+@app.route('/analytics')
 @login_required
-def get_summary():
-    try:
-        data = load_data()
-        if not data:
-            return jsonify({"status": "error", "message": "No data available"}), 404
-        
-        # Get numerical columns (assuming columns with numeric values)
-        numeric_cols = ['Current CTC per Annum', 'Expected CTC per Annum', 'Offered CTC']
-        
-        summary = {}
-        for col in numeric_cols:
-            values = [float(item[col]) for item in data if item[col] and item[col].replace('.', '', 1).isdigit()]
-            if values:
-                summary[col] = {
-                    "mean": sum(values) / len(values),
-                    "min": min(values),
-                    "max": max(values),
-                    "count": len(values)
-                }
-        
-        return jsonify(summary)
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+def analytics():
+    return render_template('analytics.html')
 
-@app.route('/api/analysis/group/<column>', methods=['GET'])
+@app.route('/api/analytics', methods=['GET'])
 @login_required
-def group_analysis(column):
+def get_analytics():
     try:
         data = load_data()
-        if not data:
-            return jsonify({"status": "error", "message": "No data available"}), 404
         
-        # Check if column exists
-        if not data or column not in data[0]:
-            return jsonify({"status": "error", "message": f"Column {column} not found"}), 400
+        total_applicant = len(data)
+        total_rejected = sum(1 for item in data if item.get('Application Status') == 'Rejected')
+        no_response = sum(1 for item in data if item.get('Application Status') == 'No Resp Call/Email')
+        not_interviewed = sum(1 for item in data if item.get('Interview Status') == 'Applied') # Assuming 'Applied' means not yet interviewed
         
-        # Get numerical columns for aggregation
-        numeric_cols = ['Current CTC per Annum', 'Expected CTC per Annum', 'Offered CTC']
-        
-        # Group by the specified column
-        grouped_data = {}
+        total_round_2_completed = sum(1 for item in data if item.get('Interview Status') == 'Tech Inter Comp') # Assuming Tech Inter Comp is Round 2
+        did_not_join = sum(1 for item in data if item.get('Application Status') == 'Did Not Join')
+        on_hold = sum(1 for item in data if item.get('Application Status') == 'On Hold')
+        accepted_waiting_reference = sum(1 for item in data if item.get('Application Status') == 'Accepted')
+        total_in_notice_yet_to_join = sum(1 for item in data if item.get('Application Status') == 'In Notice')
+        total_joined = sum(1 for item in data if item.get('Application Status') == 'Joined')
+        intern = sum(1 for item in data if item.get('Interested Position') == 'Intern') # Assuming 'Intern' is a position
+
+        # Monthly Statistics
+        monthly_stats = defaultdict(lambda: {"applicants": 0, "accepted": 0, "rejected": 0, "in_notice": 0, "joined": 0})
         for item in data:
-            group_key = item.get(column, 'Unknown')
-            if group_key not in grouped_data:
-                grouped_data[group_key] = {col: [] for col in numeric_cols}
-            
-            # Add numeric values to the appropriate group
-            for col in numeric_cols:
-                if item.get(col) and item[col].replace('.', '', 1).isdigit():
-                    grouped_data[group_key][col].append(float(item[col]))
+            date_str = item.get('Date of Application')
+            if date_str:
+                try:
+                    # Assuming date format is 'YYYY-MM-DD' or similar
+                    date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+                    month_year = date_obj.strftime('%b %Y') # e.g., 'Nov 2025'
+                    monthly_stats[month_year]["applicants"] += 1
+                    if item.get('Application Status') == 'Accepted':
+                        monthly_stats[month_year]["accepted"] += 1
+                    elif item.get('Application Status') == 'Rejected':
+                        monthly_stats[month_year]["rejected"] += 1
+                    elif item.get('Application Status') == 'In Notice':
+                        monthly_stats[month_year]["in_notice"] += 1
+                    elif item.get('Application Status') == 'Joined':
+                        monthly_stats[month_year]["joined"] += 1
+                except ValueError:
+                    # Handle cases where date_str might be in a different format or invalid
+                    pass
         
-        # Calculate averages for each group
-        result = []
-        for group_key, values in grouped_data.items():
-            group_result = {column: group_key}
-            for col, numbers in values.items():
-                if numbers:
-                    group_result[col + '_avg'] = sum(numbers) / len(numbers)
-                    group_result[col + '_count'] = len(numbers)
-                else:
-                    group_result[col + '_avg'] = 0
-                    group_result[col + '_count'] = 0
-            result.append(group_result)
+        # Sort monthly statistics by date
+        sorted_monthly_stats = []
+        for month_year in sorted(monthly_stats.keys(), key=lambda x: datetime.datetime.strptime(x, '%b %Y')):
+            stats = monthly_stats[month_year]
+            sorted_monthly_stats.append({
+                "month": month_year,
+                "applicants": stats["applicants"],
+                "accepted": stats["accepted"],
+                "rejected": stats["rejected"],
+                "in_notice": stats["in_notice"],
+                "joined": stats["joined"]
+            })
+
+        # Hiring Funnel Status by Role
+        hiring_funnel_by_role = defaultdict(lambda: {"count": 0})
+        for item in data:
+            role = item.get('Interested Position')
+            if role:
+                hiring_funnel_by_role[role]["count"] += 1
         
-        return jsonify(result)
+        sorted_hiring_funnel_by_role = [{"role": role, "count": stats["count"]} for role, stats in hiring_funnel_by_role.items()]
+
+        # Position Statistics
+        position_stats = defaultdict(lambda: {"applied": 0, "joined": 0})
+        for item in data:
+            position = item.get('Interested Position')
+            if position:
+                position_stats[position]["applied"] += 1
+                if item.get('Application Status') == 'Joined':
+                    position_stats[position]["joined"] += 1
+        
+        sorted_position_stats = [{"position": pos, "applied": stats["applied"], "joined": stats["joined"]} for pos, stats in position_stats.items()]
+        
+        return jsonify({
+            'total_applicant': total_applicant,
+            'total_rejected': total_rejected,
+            'no_response': no_response,
+            'not_interviewed': not_interviewed,
+            'total_round_2_completed': total_round_2_completed,
+            'did_not_join': did_not_join,
+            'on_hold': on_hold,
+            'accepted_waiting_reference': accepted_waiting_reference,
+            'total_in_notice_yet_to_join': total_in_notice_yet_to_join,
+            'total_joined': total_joined,
+            'intern': intern,
+            'monthly_statistics': sorted_monthly_stats,
+            'hiring_funnel_by_role': sorted_hiring_funnel_by_role,
+            'position_statistics': sorted_position_stats
+        })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
