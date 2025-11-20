@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,8 @@
         }
 
         body {
-            background: #2c3e50; /* Dark blue/grey background */
+            background: #2c3e50;
+            /* Dark blue/grey background */
             background-attachment: fixed;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
@@ -43,7 +45,7 @@
             display: flex;
             align-items: center;
             padding: 0.5rem 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .navbar-brand i {
@@ -109,7 +111,7 @@
             border: none;
             padding: 1.75rem 2rem;
             border-radius: 20px 20px 0 0 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .card-body {
@@ -217,7 +219,7 @@
             background-color: #f8fafc;
             transform: scale(1.002);
         }
-        
+
         /* Ensure hover effect works properly with sticky columns */
         .table tbody tr:hover td.sticky-column {
             background-color: #f8fafc !important;
@@ -225,73 +227,83 @@
 
         /* Application Status cell colors - For all specific statuses */
         td[data-column='Application Status'] select.status-onhold {
-            background-color: #c084fc !important; /* Purple color for On Hold */
+            background-color: #c084fc !important;
+            /* Purple color for On Hold */
             color: white;
             border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 500;
         }
-        
+
         td[data-column='Application Status'] select.status-joined {
-            background-color: #3b82f6 !important; /* Blue color for Joined */
+            background-color: #3b82f6 !important;
+            /* Blue color for Joined */
             color: white;
             border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 500;
         }
-        
+
         td[data-column='Application Status'] select.status-accepted {
-            background-color: #10b981 !important; /* Green color for Accepted */
+            background-color: #10b981 !important;
+            /* Green color for Accepted */
             color: white;
             border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 500;
         }
-        
+
         td[data-column='Application Status'] select.status-rejected {
-            background-color: #ef4444 !important; /* Red color for Rejected */
+            background-color: #ef4444 !important;
+            /* Red color for Rejected */
             color: white;
             border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 500;
         }
-        
+
         td[data-column='Application Status'] select.status-proceed {
-            background-color: #f59e0b !important; /* Amber color for Proceed Further */
+            background-color: #f59e0b !important;
+            /* Amber color for Proceed Further */
             color: white;
             border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 500;
         }
-        
+
         /* Individual option colors */
         td[data-column='Application Status'] select option[data-status='On Hold'] {
-            background-color: #c084fc !important; /* Purple color for On Hold */
+            background-color: #c084fc !important;
+            /* Purple color for On Hold */
             color: white;
         }
-        
+
         td[data-column='Application Status'] select option[data-status='Joined'] {
-            background-color: #3b82f6 !important; /* Blue color for Joined */
+            background-color: #3b82f6 !important;
+            /* Blue color for Joined */
             color: white;
         }
-        
+
         td[data-column='Application Status'] select option[data-status='Accepted'] {
-            background-color: #10b981 !important; /* Green color for Accepted */
+            background-color: #10b981 !important;
+            /* Green color for Accepted */
             color: white;
         }
-        
+
         td[data-column='Application Status'] select option[data-status='Rejected'] {
-            background-color: #ef4444 !important; /* Red color for Rejected */
+            background-color: #ef4444 !important;
+            /* Red color for Rejected */
             color: white;
         }
-        
+
         td[data-column='Application Status'] select option[data-status='Proceed Further'] {
-            background-color: #f59e0b !important; /* Amber color for Proceed Further */
+            background-color: #f59e0b !important;
+            /* Amber color for Proceed Further */
             color: white;
         }
 
@@ -464,7 +476,8 @@
             margin-bottom: 0.5rem;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             padding: 0.625rem 0.875rem;
@@ -472,7 +485,8 @@
             font-size: 0.875rem;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
@@ -524,7 +538,9 @@
         }
 
         @keyframes spinner {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Responsive adjustments */
@@ -623,6 +639,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -699,9 +716,10 @@
         }
     </style>
 </head>
+
 <body>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const groupBySelect = document.getElementById('groupByColumn');
             if (groupBySelect) {
                 console.log('groupByColumn innerHTML:', groupBySelect.innerHTML);
@@ -711,7 +729,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark" style="padding: 0.3rem 1rem;">
         <div class="container-fluid px-2">
             <div class="d-flex align-items-center">
-                <img src="/static/images/GuhaTekHorizontalLarge.svg" alt="GuhaTek Logo" style="height: 30px; margin-right: 1rem;">
+                <img src="/static/images/GuhaTekHorizontalLarge.svg" alt="GuhaTek Logo"
+                    style="height: 30px; margin-right: 1rem;">
             </div>
             <div class="d-flex align-items-center ms-3">
                 <span class="navbar-brand mb-0">Candidate Tracking System</span>
@@ -763,7 +782,8 @@
                                         <i class="bi bi-clipboard-data me-2"></i>
                                         Candidate Management
                                     </h4>
-                                    <button id="addCandidateBtn" class="btn btn-primary" onclick="openAddModal()" style="display: none;">
+                                    <button id="addCandidateBtn" class="btn btn-primary" onclick="openAddModal()"
+                                        style="display: none;">
                                         <i class="bi bi-plus-circle-fill me-2"></i>Add New Candidate
                                     </button>
                                 </div>
@@ -771,16 +791,23 @@
                             <div class="card-body" style="background: #dfe3f4; padding: 1.5rem 2rem; margin-bottom: 0;">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label for="positionFilter" class="form-label fw-semibold text-dark mb-2">Position</label>
-                                        <select id="positionFilter" class="form-select" style="border-radius: 8px; border: 1px solid #cbd5e1;">
+                                        <label for="positionFilter"
+                                            class="form-label fw-semibold text-dark mb-2">Position</label>
+                                        <select id="positionFilter" class="form-select"
+                                            style="border-radius: 8px; border: 1px solid #cbd5e1;">
                                             <option value="">All Positions</option>
                                             <option value="Site Reliability Engineer">Site Reliability Engineer</option>
-                                            <option value="Senior Site Reliability Engineer">Senior Site Reliability Engineer</option>
-                                            <option value="Lead Site Reliability Engineer">Lead Site Reliability Engineer</option>
-                                            <option value="Application Site Reliability Engineer">Application Site Reliability Engineer</option>
-                                            <option value="Security Operations Centre Engineer">Security Operations Centre Engineer</option>
+                                            <option value="Senior Site Reliability Engineer">Senior Site Reliability
+                                                Engineer</option>
+                                            <option value="Lead Site Reliability Engineer">Lead Site Reliability
+                                                Engineer</option>
+                                            <option value="Application Site Reliability Engineer">Application Site
+                                                Reliability Engineer</option>
+                                            <option value="Security Operations Centre Engineer">Security Operations
+                                                Centre Engineer</option>
                                             <option value="Performance Engineer">Performance Engineer</option>
-                                            <option value="QA Automation Engineer (Playwright & Selenium)">QA Automation Engineer (Playwright & Selenium)</option>
+                                            <option value="QA Automation Engineer (Playwright & Selenium)">QA Automation
+                                                Engineer (Playwright & Selenium)</option>
                                             <option value="DevOps Engineer">DevOps Engineer</option>
                                             <option value="Lead SAP Engineer">Lead SAP Engineer</option>
                                             <option value="AI/ML Engineer">AI/ML Engineer</option>
@@ -790,8 +817,10 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="statusFilter" class="form-label fw-semibold text-dark mb-2">Application Status</label>
-                                        <select id="statusFilter" class="form-select" style="border-radius: 8px; border: 1px solid #cbd5e1;">
+                                        <label for="statusFilter"
+                                            class="form-label fw-semibold text-dark mb-2">Application Status</label>
+                                        <select id="statusFilter" class="form-select"
+                                            style="border-radius: 8px; border: 1px solid #cbd5e1;">
                                             <option value="">Pending</option>
                                         </select>
                                     </div>
@@ -816,13 +845,28 @@
 
             <!-- Analysis Tab -->
             <div class="tab-pane fade" id="analysisTab">
+                <!-- View Switcher -->
+                <div class="row mb-3">
+                    <div class="col-md-12 d-flex justify-content-end align-items-center">
+                        <label for="viewType" class="me-2 fw-bold text-white">View Type:</label>
+                        <select id="viewType" class="form-select" style="width: 200px;">
+                            <option value="numeric">Numeric</option>
+                            <option value="chart">Chart</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="row mb-4">
                     <!-- Left Panel - Metrics -->
                     <div class="col-md-3 mb-4">
                         <div class="card shadow-sm h-100">
                             <div class="card-body p-2">
-                                <div id="metricsPanel">
+                                <div id="metricsPanel" class="numeric-view">
                                     <!-- Metrics will be populated here -->
+                                </div>
+                                <div id="metricsChartContainer" class="chart-view"
+                                    style="display: none; height: 400px;">
+                                    <canvas id="metricsChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -839,7 +883,8 @@
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 600px;">
-                                    <table class="table table-bordered table-sm mb-0" id="monthlyStatsTable">
+                                    <table class="table table-bordered table-sm mb-0 numeric-view"
+                                        id="monthlyStatsTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th class="text-center">Month</th>
@@ -858,6 +903,10 @@
                                             <!-- Totals will be populated here -->
                                         </tfoot>
                                     </table>
+                                    <div id="monthlyStatsChartContainer" class="chart-view"
+                                        style="display: none; height: 400px;">
+                                        <canvas id="monthlyStatsChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -869,8 +918,10 @@
                 <!-- ============================================= -->
                 <div class="row mb-4">
                     <div class="col-md-12">
-                        <div class="card shadow-sm" style="border: 5px solid #d8b4d8; box-shadow: 0 4px 12px rgba(216, 180, 216, 0.5);">
-                            <div class="card-header" style="background: linear-gradient(to right, #d8b4d8 0%, #c9a0c9 100%);">
+                        <div class="card shadow-sm"
+                            style="border: 5px solid #d8b4d8; box-shadow: 0 4px 12px rgba(216, 180, 216, 0.5);">
+                            <div class="card-header"
+                                style="background: linear-gradient(to right, #d8b4d8 0%, #c9a0c9 100%);">
                                 <h5 class="mb-0 text-center" style="color: white; font-weight: 700; font-size: 1.5rem;">
                                     <i class="bi bi-briefcase-fill me-2"></i>
                                     📊 POSITION STATISTICS 📊
@@ -878,20 +929,32 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover mb-0">
+                                    <table class="table table-bordered table-hover mb-0 numeric-view">
                                         <thead style="background-color: #d8b4d8;">
                                             <tr>
-                                                <th style="width: 60%; color: #1f2937; font-weight: 600; text-align: center;">Position</th>
-                                                <th style="width: 20%; color: #1f2937; font-weight: 600; text-align: center;">Applied</th>
-                                                <th style="width: 20%; color: #1f2937; font-weight: 600; text-align: center;">Joined</th>
+                                                <th
+                                                    style="width: 60%; color: #1f2937; font-weight: 600; text-align: center;">
+                                                    Position</th>
+                                                <th
+                                                    style="width: 20%; color: #1f2937; font-weight: 600; text-align: center;">
+                                                    Applied</th>
+                                                <th
+                                                    style="width: 20%; color: #1f2937; font-weight: 600; text-align: center;">
+                                                    Joined</th>
                                             </tr>
                                         </thead>
                                         <tbody id="positionStatsBody">
                                             <tr style="background-color: #fff3cd;">
-                                                <td colspan="3" class="text-center" style="font-weight: bold; color: #856404; padding: 2rem;">⏳ Loading position data...</td>
+                                                <td colspan="3" class="text-center"
+                                                    style="font-weight: bold; color: #856404; padding: 2rem;">⏳ Loading
+                                                    position data...</td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                    <div id="positionStatsChartContainer" class="chart-view"
+                                        style="display: none; height: 400px;">
+                                        <canvas id="positionStatsChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -911,7 +974,10 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <div class="chart-container">
+                                <div id="applicationStatusNumeric" class="numeric-view">
+                                    <!-- Numeric data will be populated here -->
+                                </div>
+                                <div class="chart-container chart-view" style="display: none; height: 400px;">
                                     <canvas id="applicationStatusChart"></canvas>
                                 </div>
                             </div>
@@ -922,146 +988,151 @@
                 <!-- Position-wise Analytics -->
                 <div class="row">
 
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Data Modal -->
-    <div class="modal fade" id="addDataModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addDataModalLabel">
-                        <i class="bi bi-person-plus-fill me-2"></i>
-                        Add New Candidate
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addDataForm">
-                        <!-- Form fields will be dynamically populated -->
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>
-                        Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary" id="saveDataBtn">
-                        <i class="bi bi-check-circle me-1"></i>
-                        Save Candidate
-                    </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Data Modal -->
-    <div class="modal fade" id="editDataModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="remarksDetailModalLabel">
-                        <i class="bi bi-pencil-square me-2"></i>
-                        Edit Candidate
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editDataForm">
-                        <input type="hidden" id="editRecordIndex">
-                        <div id="editFormBody"></div>
-                        <!-- Form fields will be dynamically populated -->
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>
-                        Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary" id="updateDataBtn">
-                        <i class="bi bi-save me-1"></i>
-                        Update Candidate
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Candidate Detail Modal -->
-    <div class="modal fade" id="candidateDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="remarksDetailModalLabel">
-                        <i class="bi bi-person-lines-fill me-2"></i>
-                        Candidate Details
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="candidateDetailContent">
-                        <!-- Candidate details will be populated here -->
+        <!-- Add Data Modal -->
+        <div class="modal fade" id="addDataModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addDataModalLabel">
+                            <i class="bi bi-person-plus-fill me-2"></i>
+                            Add New Candidate
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addDataForm">
+                            <!-- Form fields will be dynamically populated -->
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="saveDataBtn">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Save Candidate
+                        </button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="editRemarksBtn">
-                        <i class="bi bi-pencil-square me-1"></i>
-                        Edit
-                    </button>
-                    <button type="button" class="btn btn-success" id="saveRemarksBtn" style="display: none;">
-                        <i class="bi bi-save me-1"></i>
-                        Save
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>
-                        Close
-                    </button>
-                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Remarks Detail Modal -->
-    <div class="modal fade" id="remarksDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="remarksDetailModalLabel">
-                        <i class="bi bi-chat-left-text me-2"></i>
-                        Candidate Remarks
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="remarksDetailContent">
-                        <!-- Remarks will be populated here -->
+        <!-- Edit Data Modal -->
+        <div class="modal fade" id="editDataModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="remarksDetailModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Edit Candidate
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editDataForm">
+                            <input type="hidden" id="editRecordIndex">
+                            <div id="editFormBody"></div>
+                            <!-- Form fields will be dynamically populated -->
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="updateDataBtn">
+                            <i class="bi bi-save me-1"></i>
+                            Update Candidate
+                        </button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>
-                        Close
-                    </button>
+            </div>
+        </div>
+
+        <!-- Candidate Detail Modal -->
+        <div class="modal fade" id="candidateDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="remarksDetailModalLabel">
+                            <i class="bi bi-person-lines-fill me-2"></i>
+                            Candidate Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="candidateDetailContent">
+                            <!-- Candidate details will be populated here -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="editRemarksBtn">
+                            <i class="bi bi-pencil-square me-1"></i>
+                            Edit
+                        </button>
+                        <button type="button" class="btn btn-success" id="saveRemarksBtn" style="display: none;">
+                            <i class="bi bi-save me-1"></i>
+                            Save
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
-    <script src="/static/js/app.js?v=38"></script>
-    <script>
-        // Show user management link if user is admin
-        fetch('/api/users')
-            .then(response => {
-                if (response.ok) {
-                    document.getElementById('userManagementNav').style.display = 'block';
-                }
-            })
-            .catch(() => {
-                // User is not admin, hide the link
-            });
-    </script>
+        <!-- Remarks Detail Modal -->
+        <div class="modal fade" id="remarksDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="remarksDetailModalLabel">
+                            <i class="bi bi-chat-left-text me-2"></i>
+                            Candidate Remarks
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="remarksDetailContent">
+                            <!-- Remarks will be populated here -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+        <script src="/static/js/app.js?v=38"></script>
+        <script>
+            // Show user management link if user is admin
+            fetch('/api/users')
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('userManagementNav').style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    // User is not admin, hide the link
+                });
+        </script>
 </body>
+
 </html>

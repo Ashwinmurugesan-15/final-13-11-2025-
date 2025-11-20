@@ -61,7 +61,7 @@ const PREDEFINED_DROPDOWNS = {
 };
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Only fetch analytics data if on the analytics page
     if (window.location.pathname === '/analytics') {
         fetchAnalyticsData();
@@ -72,53 +72,53 @@ document.addEventListener('DOMContentLoaded', function() {
         // Then load data
         fetchData();
     });
-    
+
     // Set up event listeners
     const saveBtn = document.getElementById('saveDataBtn');
     const updateBtn = document.getElementById('updateDataBtn');
     const positionFilter = document.getElementById('positionFilter');
     const statusFilter = document.getElementById('statusFilter');
-    
+
     if (saveBtn) saveBtn.addEventListener('click', saveNewRecord);
     if (updateBtn) updateBtn.addEventListener('click', updateRecord);
     if (positionFilter) positionFilter.addEventListener('change', applyTableFilters);
     if (statusFilter) statusFilter.addEventListener('change', applyTableFilters);
-    
+
     // Update sticky column positions on window resize
     let resizeTimeout;
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
             updateStickyColumnPositions();
         }, 100);
     });
-    
+
     // Set up tab navigation (only for links that target tabs)
     document.querySelectorAll('.nav-link[data-bs-target]').forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
             const tabId = this.getAttribute('data-bs-target');
             if (!tabId) {
                 return;
             }
-            
+
             // Hide all tab panes
             document.querySelectorAll('.tab-pane').forEach(pane => {
                 pane.classList.remove('show', 'active');
             });
-            
+
             // Show the selected tab pane
             const targetPane = document.querySelector(tabId);
             if (targetPane) {
                 targetPane.classList.add('show', 'active');
             }
-            
+
             // Update active state on nav links
             document.querySelectorAll('.nav-link[data-bs-target]').forEach(navLink => {
                 navLink.classList.remove('active');
             });
             this.classList.add('active');
-            
+
             // Load analysis data when switching to analysis tab
             if (tabId === '#analysisTab') {
                 // Summary removed: skip fetchSummary()
@@ -127,57 +127,123 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateMonthlyStats(tableData);
                     updateApplicationStatusChart(tableData);
                     // updatePositionChart(tableData); // Removed
+
+                    // Trigger view update based on current dropdown selection
+                    const viewType = document.getElementById('viewType').value;
+                    toggleView(viewType);
                 }
             }
         });
     });
+
+    // View Type Dropdown Listener
+    const viewTypeSelect = document.getElementById('viewType');
+    if (viewTypeSelect) {
+        viewTypeSelect.addEventListener('change', function () {
+            toggleView(this.value);
+        });
+    }
 });
+
+// Toggle View Function
+function toggleView(viewType) {
+    const numericElements = document.querySelectorAll('.numeric-view');
+    const chartElements = document.querySelectorAll('.chart-view');
+
+    if (viewType === 'chart') {
+        numericElements.forEach(el => el.style.display = 'none');
+        chartElements.forEach(el => el.style.display = 'block');
+
+        // Re-render charts if data is available
+        if (tableData && tableData.length > 0) {
+            // Ensure charts are rendered properly (resize/update)
+            updateKeyMetrics(calculateTotals(tableData), tableData);
+            updateMonthlyStats(tableData);
+            updatePositionStats(tableData);
+            updateApplicationStatusChart(tableData);
+        }
+    } else {
+        numericElements.forEach(el => {
+            if (el.tagName === 'TABLE') {
+                el.style.display = 'table';
+            } else {
+                el.style.display = 'block';
+            }
+        });
+        chartElements.forEach(el => el.style.display = 'none');
+    }
+}
+
+// Helper to calculate totals (extracted from updateMonthlyStats logic)
+function calculateTotals(data) {
+    const totals = {
+        applicants: data.length,
+        accepted: 0,
+        rejected: 0,
+        inNotice: 0,
+        joined: 0,
+        feedbackGiven: 0
+    };
+
+    data.forEach(candidate => {
+        switch (candidate['Application Status']) {
+            case 'Accepted': totals.accepted++; break;
+            case 'Rejected': totals.rejected++; break;
+            case 'In Notice': totals.inNotice++; break;
+            case 'Joined': totals.joined++; break;
+        }
+        if (candidate['Reference Feedback']) {
+            totals.feedbackGiven++;
+        }
+    });
+    return totals;
+}
 
 // Update distribution chart for numeric fields
 function updateDistributionChart() {
     const numericColumns = ['Current CTC per Annum', 'Expected CTC per Annum', 'Offered CTC'];
     let selectedColumn = null;
-    
+
     for (const column of numericColumns) {
         if (tableColumns.includes(column)) {
             selectedColumn = column;
             break;
         }
     }
-    
+
     if (!selectedColumn || tableData.length === 0) {
-        document.getElementById('distributionChartContainer').innerHTML = 
+        document.getElementById('distributionChartContainer').innerHTML =
             '<div class="alert alert-info">No numeric data available for distribution analysis</div>';
         return;
     }
-    
+
     const values = tableData
         .map(item => parseFloat(item[selectedColumn]))
         .filter(value => !isNaN(value));
-    
+
     if (values.length === 0) {
-        document.getElementById('distributionChartContainer').innerHTML = 
+        document.getElementById('distributionChartContainer').innerHTML =
             '<div class="alert alert-info">No valid numeric data available for distribution analysis</div>';
         return;
     }
-    
+
     const min = Math.min(...values);
     const max = Math.max(...values);
     const binCount = Math.min(10, values.length);
     const binSize = (max - min) / binCount;
-    
+
     const bins = Array(binCount).fill(0);
     values.forEach(value => {
         const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
         bins[binIndex]++;
     });
-    
+
     const binLabels = Array(binCount).fill(0).map((_, i) => {
         const start = min + i * binSize;
         const end = min + (i + 1) * binSize;
         return `${start.toFixed(1)}-${end.toFixed(1)}`;
     });
-    
+
     const distCanvas = document.getElementById('distributionChart');
     if (!distCanvas) {
         const container = document.getElementById('distributionChartContainer');
@@ -187,11 +253,11 @@ function updateDistributionChart() {
         return;
     }
     const ctx = distCanvas.getContext('2d');
-    
+
     if (distributionChart) {
         distributionChart.destroy();
     }
-    
+
     distributionChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -241,7 +307,7 @@ function updateDistributionChart() {
 function showCandidateDetails(candidate) {
     const modalContent = document.getElementById('candidateDetailContent');
     modalContent.innerHTML = '';
-    
+
     // Render grouped stage remarks as cards at the top
     const remarksSection = document.createElement('div');
     remarksSection.className = 'mb-4';
@@ -283,7 +349,7 @@ function showCandidateDetails(candidate) {
 
     remarksSection.appendChild(row);
     modalContent.appendChild(remarksSection);
-    
+
     // Use FIELD_ORDER to display fields in the specified order (skip remarks fields already shown)
     FIELD_ORDER.forEach(field => {
         if (field === 'Initial Screening' || field === 'Round 1 Remarks' || field === 'Round 2 Remarks' || field === 'Remarks') {
@@ -292,14 +358,14 @@ function showCandidateDetails(candidate) {
         if (candidate.hasOwnProperty(field) && candidate[field] !== null && candidate[field] !== '') {
             const detailItem = document.createElement('div');
             detailItem.className = 'mb-3';
-            
+
             const label = document.createElement('div');
             label.className = 'text-muted small fw-semibold mb-1';
             label.textContent = field === 'Date' ? 'Date:' : field + ':';
-            
+
             const value = document.createElement('div');
             value.className = 'candidate-detail-value';
-            
+
             // Special handling for specific fields
             if (field === 'Resume' && candidate[field]) {
                 value.innerHTML = `<a href="${candidate[field]}" target="_blank" class="btn btn-outline-primary btn-sm">
@@ -319,40 +385,40 @@ function showCandidateDetails(candidate) {
             } else {
                 value.textContent = field === 'Date' && candidate[field] ? new Date(candidate[field]).toLocaleDateString() : candidate[field];
             }
-            
+
             detailItem.appendChild(label);
             detailItem.appendChild(value);
             modalContent.appendChild(detailItem);
         }
     });
-    
+
     // Display any remaining fields not in FIELD_ORDER
     const remainingFields = Object.keys(candidate).filter(field => !FIELD_ORDER.includes(field));
     remainingFields.forEach(field => {
         if (candidate.hasOwnProperty(field) && candidate[field] !== null && candidate[field] !== '') {
             const detailItem = document.createElement('div');
             detailItem.className = 'mb-3';
-            
+
             const label = document.createElement('div');
             label.className = 'text-muted small fw-semibold mb-1';
             label.textContent = field === 'Timestamp' ? 'Date:' : field + ':';
-            
+
             const value = document.createElement('div');
             value.className = 'candidate-detail-value';
             // Ensure Date shows only date in remaining fields as well
-if (field === 'Timestamp' && candidate[field]) {
+            if (field === 'Timestamp' && candidate[field]) {
                 const date = new Date(candidate[field]);
                 value.textContent = date.toLocaleDateString();
             } else {
                 value.textContent = candidate[field];
             }
-            
+
             detailItem.appendChild(label);
             detailItem.appendChild(value);
             modalContent.appendChild(detailItem);
         }
     });
-    
+
     // Show the modal
     const modal = new bootstrap.Modal(document.getElementById('candidateDetailModal'));
     modal.show();
@@ -360,7 +426,7 @@ if (field === 'Timestamp' && candidate[field]) {
 
 // Function to get status badge class
 function getStatusBadgeClass(status) {
-    switch(status) {
+    switch (status) {
         case 'Active': return 'bg-success';
         case 'Inactive': return 'bg-secondary';
         case 'Pending': return 'bg-warning';
@@ -372,7 +438,7 @@ function getStatusBadgeClass(status) {
 
 // Function to get status class for Application Status cell coloring
 function getStatusClass(status) {
-    switch(status) {
+    switch (status) {
         case 'Accepted': return 'status-accepted';
         case 'Rejected': return 'status-rejected';
         case 'On Hold': return 'status-onhold';
@@ -390,7 +456,7 @@ async function fetchDropdownOptions() {
             throw new Error('Failed to fetch dropdown options');
         }
         const serverOptions = await response.json();
-        
+
         // Merge server options with predefined options
         dropdownOptions = { ...serverOptions, ...PREDEFINED_DROPDOWNS };
         console.log('Dropdown options loaded:', dropdownOptions);
@@ -413,7 +479,7 @@ function populateStatusFilterOptions() {
 
     // Clear the dropdown and add a default "All Application Statuses" option
     statusFilter.innerHTML = '<option value=\"\">All Application Statuses</option>';
-    
+
     // Add an empty option that appears as a blank selection
     const emptyOption = document.createElement('option');
     emptyOption.value = 'EMPTY';  // Distinct value for empty option
@@ -443,7 +509,7 @@ function fetchData() {
             // Store original data when fetched from API
             originalTableData = JSON.parse(JSON.stringify(data)); // Deep copy
             currentIsAdmin = is_admin;
-        updateAdminControls(is_admin);
+            updateAdminControls(is_admin);
             // Apply current filter if any
             const positionFilterElement = document.getElementById('positionFilter');
             const statusFilterElement = document.getElementById('statusFilter');
@@ -510,9 +576,9 @@ function applyTableFilters() {
         .filter(row => {
             const interestedPosition = row['Interested Position'] || '';
             const applicationStatus = row['Application Status'] || '';
-            
+
             const matchesPosition = !hasPositionFilter || interestedPosition === selectedPosition;
-            
+
             // Handle the EMPTY option for application status
             let matchesStatus = true;
             if (hasStatusFilter) {
@@ -524,7 +590,7 @@ function applyTableFilters() {
                     matchesStatus = applicationStatus === selectedStatus;
                 }
             }
-            
+
             return matchesPosition && matchesStatus;
         });
 
@@ -538,30 +604,30 @@ function updateStickyColumnPositions() {
         console.log('Table not found');
         return;
     }
-    
+
     const headerRow = table.querySelector('thead tr');
     if (!headerRow) {
         console.log('Header row not found');
         return;
     }
-    
+
     const stickyColumns = ['Date', 'Name', 'Email ID'];
     let cumulativeLeft = 0;
-    
+
     stickyColumns.forEach((columnName, index) => {
         // Find the column index
         const headers = Array.from(headerRow.querySelectorAll('th'));
         const columnIndex = headers.findIndex(th => th.textContent.trim() === columnName);
-        
+
         if (columnIndex !== -1) {
             const headerCell = headers[columnIndex];
             // Use getBoundingClientRect for more accurate width
             const actualWidth = headerCell.getBoundingClientRect().width || headerCell.offsetWidth;
-            
+
             if (actualWidth > 0) {
                 // Update header
                 headerCell.style.left = `${cumulativeLeft}px`;
-                
+
                 // Update all body cells in this column
                 const bodyRows = table.querySelectorAll('tbody tr');
                 bodyRows.forEach(row => {
@@ -570,7 +636,7 @@ function updateStickyColumnPositions() {
                         cell.style.left = `${cumulativeLeft}px`;
                     }
                 });
-                
+
                 cumulativeLeft += actualWidth;
             }
         }
@@ -581,18 +647,18 @@ function updateStickyColumnPositions() {
 function populateTable(data, isAdmin) {
     tableData = data;
     currentIsAdmin = isAdmin; // Store admin status
-    
+
     const tableBody = document.getElementById('dataTableBody');
     const tableHead = document.getElementById('dataTableHead');
-    
+
     if (!tableBody || !tableHead) {
         console.error('Table elements not found in the DOM');
         return;
     }
-    
+
     tableBody.innerHTML = '';
     tableHead.innerHTML = '';
-    
+
     let columnsToShow = isAdmin ? FIELD_ORDER : ['Date', 'Name', 'Email ID', 'Interested Position', 'Current Role', 'Current Organization', 'Current Location', 'Resume', 'Referred By', 'Interview Status', 'Application Status', 'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks'];
 
     if (data && data.length > 0) {
@@ -601,7 +667,7 @@ function populateTable(data, isAdmin) {
         const remaining = availableColumns.filter(c => !ordered.includes(c));
 
         tableColumns = isAdmin ? [...ordered, ...remaining] : columnsToShow;
-        
+
         // Create table header
         const headerRow = document.createElement('tr');
         tableColumns.forEach((column, colIndex) => {
@@ -619,21 +685,21 @@ function populateTable(data, isAdmin) {
             }
             headerRow.appendChild(th);
         });
-        
+
         // Add action column header (for both admin and non-admin users)
         const actionTh = document.createElement('th');
         actionTh.textContent = 'Actions';
         actionTh.style.minWidth = '120px';
         headerRow.appendChild(actionTh);
-        
+
         tableHead.appendChild(headerRow);
-        
+
         // Create table rows
         data.forEach((row, index) => {
             const tr = document.createElement('tr');
             tr.dataset.index = index;
             tr.style.cursor = 'pointer'; // Add pointer cursor to indicate clickable
-            
+
             // Apply row color based on Application Status - REMOVED
             /*
             const applicationStatus = row['Application Status'] || '';
@@ -647,7 +713,7 @@ function populateTable(data, isAdmin) {
                 tr.classList.add('row-proceed');
             }
             */
-            
+
             // Add click event to show candidate details
             tr.addEventListener('click', (e) => {
                 // Don't trigger if clicking on action buttons or dropdowns
@@ -656,15 +722,15 @@ function populateTable(data, isAdmin) {
                     showCandidateDetails(row, recordIndex, isAdmin);
                 }
             });
-            
+
             tableColumns.forEach((column, colIndex) => {
                 const td = document.createElement('td');
-                
+
                 // Add sticky-column class to first three columns (Date, Name, Email ID)
                 if (column === 'Date' || column === 'Name' || column === 'Email ID') {
                     td.classList.add('sticky-column');
                 }
-                
+
                 if (column === 'Candidate') {
                     // Display candidate name or a default identifier
                     const candidateName = row['Name'] || row['Name'] || 'Unknown Candidate';
@@ -699,7 +765,7 @@ function populateTable(data, isAdmin) {
 
                     const select = document.createElement('select');
                     select.className = 'form-select';
-                    
+
                     // Apply status-specific class for Application Status to the select element
                     // Only apply colors for specific statuses, others remain normal
                     if (column === 'Application Status') {
@@ -718,7 +784,7 @@ function populateTable(data, isAdmin) {
                     }
 
                     const statusOptions = dropdownOptions[column] || [];
-                    
+
                     // Add empty/null option for Reject Mail Sent (always first)
                     if (column === 'Reject Mail Sent') {
                         const emptyOption = document.createElement('option');
@@ -730,7 +796,7 @@ function populateTable(data, isAdmin) {
                         }
                         select.appendChild(emptyOption);
                     }
-                    
+
                     // Add empty option for Application Status
                     if (column === 'Application Status') {
                         const emptyOption = document.createElement('option');
@@ -738,7 +804,7 @@ function populateTable(data, isAdmin) {
                         emptyOption.textContent = '(Empty)';
                         select.appendChild(emptyOption);
                     }
-                    
+
                     if (statusOptions.length > 0) {
                         statusOptions.forEach(option => {
                             const optionElement = document.createElement('option');
@@ -778,17 +844,17 @@ function populateTable(data, isAdmin) {
                         const newStatus = e.target.value;
                         const rowElement = select.closest('tr');
                         const oldStatus = row[column] || '';
-                        
+
                         // Find the correct index to use for update
                         const recordIndex = getRecordIndex(row);
-                        
+
                         // Update select element color immediately based on Application Status
                         // Only apply colors for specific statuses, others remain normal
                         if (column === 'Application Status') {
                             // Remove existing status classes
                             const statusClasses = ['status-onhold', 'status-joined', 'status-proceed', 'status-rejected', 'status-accepted'];
                             statusClasses.forEach(cls => select.classList.remove(cls));
-                            
+
                             // Add new status class for specific statuses
                             if (newStatus === 'On Hold') {
                                 select.classList.add('status-onhold');
@@ -803,7 +869,7 @@ function populateTable(data, isAdmin) {
                             }
                             // All other statuses will remain with default styling
                         }
-                        
+
                         // Update status with error handling to revert color if update fails
                         updateRecordStatus(recordIndex, column, newStatus, rowElement, oldStatus, column);
                     });
@@ -868,10 +934,10 @@ function populateTable(data, isAdmin) {
             // Add action buttons (Edit, Delete)
             if (isAdmin) {
                 const actionTd = document.createElement('td');
-                
+
                 // Find the correct index to use (handle filtering)
                 const recordIndex = getRecordIndex(row);
-                
+
                 const editBtn = document.createElement('button');
                 editBtn.className = 'btn btn-sm btn-primary edit-btn';
                 editBtn.title = 'Edit';
@@ -880,7 +946,7 @@ function populateTable(data, isAdmin) {
                     e.stopPropagation(); // Prevent row click
                     openEditModal(recordIndex, isAdmin);
                 };
-                
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-sm btn-danger delete-btn';
                 deleteBtn.title = 'Delete';
@@ -889,17 +955,17 @@ function populateTable(data, isAdmin) {
                     e.stopPropagation(); // Prevent row click
                     deleteRecord(recordIndex);
                 };
-                
+
                 actionTd.appendChild(editBtn);
                 actionTd.appendChild(deleteBtn);
                 tr.appendChild(actionTd);
             } else {
                 // For non-admin users, add Edit button that only shows Initial Screening and Round 1 Remarks
                 const actionTd = document.createElement('td');
-                
+
                 // Find the correct index to use (handle filtering)
                 const recordIndex = getRecordIndex(row);
-                
+
                 const editBtn = document.createElement('button');
                 editBtn.className = 'btn btn-sm btn-primary edit-btn';
                 editBtn.title = 'Edit';
@@ -908,19 +974,19 @@ function populateTable(data, isAdmin) {
                     e.stopPropagation(); // Prevent row click
                     openEditModal(recordIndex, isAdmin);
                 };
-                
+
                 actionTd.appendChild(editBtn);
                 tr.appendChild(actionTd);
             }
-            
+
             tableBody.appendChild(tr);
         });
-        
+
         // Update sticky column positions based on actual widths (after DOM update)
         setTimeout(() => {
             updateStickyColumnPositions();
         }, 0);
-        
+
         // updateGroupByOptions(); // Removed as function is not defined
     } else {
         console.log('No data available to populate table');
@@ -941,61 +1007,61 @@ function updateRecordStatus(index, column, newStatus, rowElement = null, oldStat
         },
         body: JSON.stringify(updatedRecord),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === 'success') {
-            showNotification('Status updated successfully!', 'success');
-            tableData[index][column] = newStatus; // Update local data to avoid full refresh
-        } else {
-            showNotification(data.message || 'Failed to update status.', 'error');
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Status updated successfully!', 'success');
+                tableData[index][column] = newStatus; // Update local data to avoid full refresh
+            } else {
+                showNotification(data.message || 'Failed to update status.', 'error');
+                // Revert cell color if update failed and we have the cell element
+                if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
+                    // Find the Application Status cell and select element
+                    const statusCell = rowElement.querySelector("td[data-column='Application Status']");
+                    if (statusCell) {
+                        const selectElement = statusCell.querySelector('select');
+                        if (selectElement) {
+                            // Remove existing status classes
+                            const statusClasses = ['status-accepted', 'status-rejected', 'status-onhold', 'status-proceed', 'status-joined'];
+                            statusClasses.forEach(cls => selectElement.classList.remove(cls));
+
+                            // Add old status class
+                            const oldStatusClass = getStatusClass(oldStatus);
+                            if (oldStatusClass) {
+                                selectElement.classList.add(oldStatusClass);
+                            }
+                        }
+                    }
+                }
+                fetchData(); // Revert change on failure
+            }
+        })
+        .catch(error => {
+            console.error('Error updating record:', error);
+            showNotification('Error updating record', 'error');
             // Revert cell color if update failed and we have the cell element
             if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
-                // Find the Application Status cell and select element
+                // Find the Application Status cell
                 const statusCell = rowElement.querySelector("td[data-column='Application Status']");
                 if (statusCell) {
-                    const selectElement = statusCell.querySelector('select');
-                    if (selectElement) {
-                        // Remove existing status classes
-                        const statusClasses = ['status-accepted', 'status-rejected', 'status-onhold', 'status-proceed', 'status-joined'];
-                        statusClasses.forEach(cls => selectElement.classList.remove(cls));
-                        
-                        // Add old status class
-                        const oldStatusClass = getStatusClass(oldStatus);
-                        if (oldStatusClass) {
-                            selectElement.classList.add(oldStatusClass);
-                        }
+                    // Remove existing status classes
+                    const statusClasses = ['status-accepted', 'status-rejected', 'status-onhold', 'status-proceed', 'status-joined'];
+                    statusClasses.forEach(cls => statusCell.classList.remove(cls));
+
+                    // Add old status class
+                    const oldStatusClass = getStatusClass(oldStatus);
+                    if (oldStatusClass) {
+                        statusCell.classList.add(oldStatusClass);
                     }
                 }
             }
             fetchData(); // Revert change on failure
-        }
-    })
-    .catch(error => {
-        console.error('Error updating record:', error);
-        showNotification('Error updating record', 'error');
-        // Revert cell color if update failed and we have the cell element
-        if (rowElement && statusColumn === 'Application Status' && oldStatus !== null) {
-            // Find the Application Status cell
-            const statusCell = rowElement.querySelector("td[data-column='Application Status']");
-            if (statusCell) {
-                // Remove existing status classes
-                const statusClasses = ['status-accepted', 'status-rejected', 'status-onhold', 'status-proceed', 'status-joined'];
-                statusClasses.forEach(cls => statusCell.classList.remove(cls));
-                
-                // Add old status class
-                const oldStatusClass = getStatusClass(oldStatus);
-                if (oldStatusClass) {
-                    statusCell.classList.add(oldStatusClass);
-                }
-            }
-        }
-        fetchData(); // Revert change on failure
-    });
+        });
 }
 
 
@@ -1003,7 +1069,7 @@ function updateRecordStatus(index, column, newStatus, rowElement = null, oldStat
 // Function to populate form fields for add/edit modals
 function populateFormFields(formId, data = null) {
     const form = document.getElementById(formId);
-    
+
     // For edit form, preserve the hidden input field
     if (formId === 'editDataForm') {
         const hiddenInput = form.querySelector('#editRecordIndex');
@@ -1132,7 +1198,7 @@ function populateFormFields(formId, data = null) {
 // Function to open add modal
 function openAddModal() {
     populateFormFields('addDataForm');
-    
+
     const modal = new bootstrap.Modal(document.getElementById('addDataModal'));
     modal.show();
 }
@@ -1146,39 +1212,39 @@ function openEditModal(index, isAdmin) {
         showNotification('Record not found', 'error');
         return;
     }
-    
+
     // Set the edit record index in the form
     const editRecordIndexInput = document.getElementById('editRecordIndex');
     if (editRecordIndexInput) {
         editRecordIndexInput.value = index;
     }
-    
+
     const modal = new bootstrap.Modal(document.getElementById('editDataModal'));
     const formBody = document.getElementById('editFormBody');
-    
+
     formBody.innerHTML = '';
-    
+
     // Determine which fields to show based on admin status
     // For non-admin: show all visible columns but only allow editing Initial Screening and Round 1 Remarks
     let fieldsToShow = isAdmin ? FIELD_ORDER : ['Date', 'Name', 'Email ID', 'Interested Position', 'Current Role', 'Current Organization', 'Current Location', 'Resume', 'Referred By', 'Interview Status', 'Application Status', 'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks'];
-    
+
     // Fields that are editable for non-admin users
     const editableFieldsForUser = ['Initial Screening', 'Round 1 Remarks'];
-    
+
     // Create form fields for each column
     fieldsToShow.forEach(column => {
         if (column === 'Timestamp') return; // Skip timestamp
-        
+
         const formGroup = document.createElement('div');
         formGroup.className = 'mb-3';
-        
+
         const label = document.createElement('label');
         label.className = 'form-label';
         label.textContent = column;
-        
+
         let input;
         const isEditable = isAdmin || editableFieldsForUser.includes(column);
-        
+
         if (column === 'Interview Status' || column === 'Application Status' || column === 'Reject Mail Sent') {
             input = document.createElement('select');
             input.className = 'form-select';
@@ -1187,7 +1253,7 @@ function openEditModal(index, isAdmin) {
                 input.style.backgroundColor = '#e9ecef';
                 input.style.cursor = 'not-allowed';
             }
-            
+
             // Add default/empty option
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
@@ -1200,7 +1266,7 @@ function openEditModal(index, isAdmin) {
                 defaultOption.selected = true;
             }
             input.appendChild(defaultOption);
-            
+
             // Add dropdown options if available
             if (dropdownOptions[column]) {
                 dropdownOptions[column].forEach(option => {
@@ -1234,15 +1300,15 @@ function openEditModal(index, isAdmin) {
                 input.style.cursor = 'not-allowed';
             }
         }
-        
+
         input.id = 'edit_' + column;
         input.name = column;
-        
+
         formGroup.appendChild(label);
         formGroup.appendChild(input);
         formBody.appendChild(formGroup);
     });
-    
+
     modal.show();
 }
 
@@ -1250,14 +1316,14 @@ function openEditModal(index, isAdmin) {
 function saveNewRecord() {
     const formData = new FormData(document.getElementById('addDataForm'));
     const newRecord = {};
-    
+
     // Convert form data to object
     for (let [key, value] of formData.entries()) {
         // Convert keys back to original format with spaces
         const originalKey = FIELD_ORDER.find(field => field.replace(/\s+/g, '') === key) || key;
         newRecord[originalKey] = value;
     }
-    
+
     fetch('/api/data', {
         method: 'POST',
         headers: {
@@ -1265,20 +1331,20 @@ function saveNewRecord() {
         },
         body: JSON.stringify(newRecord),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            showNotification('Record added successfully!', 'success');
-            fetchData(); // Refresh table
-            bootstrap.Modal.getInstance(document.getElementById('addDataModal')).hide();
-        } else {
-            showNotification(data.message || 'Failed to add record.', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error adding record:', error);
-        showNotification('Error adding record', 'error');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Record added successfully!', 'success');
+                fetchData(); // Refresh table
+                bootstrap.Modal.getInstance(document.getElementById('addDataModal')).hide();
+            } else {
+                showNotification(data.message || 'Failed to add record.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding record:', error);
+            showNotification('Error adding record', 'error');
+        });
 }
 
 // Function to update record
@@ -1286,14 +1352,14 @@ function updateRecord() {
     const index = document.getElementById('editRecordIndex').value;
     const formData = new FormData(document.getElementById('editDataForm'));
     const updatedRecord = {};
-    
+
     // Convert form data to object
     for (let [key, value] of formData.entries()) {
         // Convert keys back to original format with spaces
         const originalKey = FIELD_ORDER.find(field => field.replace(/\s+/g, '') === key) || key;
         updatedRecord[originalKey] = value;
     }
-    
+
     fetch(`/api/data/${index}`, {
         method: 'PUT',
         headers: {
@@ -1301,20 +1367,20 @@ function updateRecord() {
         },
         body: JSON.stringify(updatedRecord),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            showNotification('Record updated successfully!', 'success');
-            fetchData(); // Refresh table
-            bootstrap.Modal.getInstance(document.getElementById('editDataModal')).hide();
-        } else {
-            showNotification(data.message || 'Failed to update record.', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error updating record:', error);
-        showNotification('Error updating record', 'error');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Record updated successfully!', 'success');
+                fetchData(); // Refresh table
+                bootstrap.Modal.getInstance(document.getElementById('editDataModal')).hide();
+            } else {
+                showNotification(data.message || 'Failed to update record.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating record:', error);
+            showNotification('Error updating record', 'error');
+        });
 }
 
 // Function to delete record
@@ -1323,19 +1389,19 @@ function deleteRecord(index) {
         fetch(`/api/data/${index}`, {
             method: 'DELETE',
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showNotification('Record deleted successfully!', 'success');
-                fetchData(); // Refresh table
-            } else {
-                showNotification(data.message || 'Failed to delete record.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting record:', error);
-            showNotification('Error deleting record', 'error');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showNotification('Record deleted successfully!', 'success');
+                    fetchData(); // Refresh table
+                } else {
+                    showNotification(data.message || 'Failed to delete record.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting record:', error);
+                showNotification('Error deleting record', 'error');
+            });
     }
 }
 
@@ -1343,7 +1409,7 @@ function deleteRecord(index) {
 function showNotification(message, type) {
     const notificationContainer = document.getElementById('notificationContainer');
     if (!notificationContainer) return;
-    
+
     const notification = document.createElement('div');
     notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
     notification.role = 'alert';
@@ -1351,9 +1417,9 @@ function showNotification(message, type) {
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
+
     notificationContainer.appendChild(notification);
-    
+
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
         if (notification.parentNode) {
@@ -1462,37 +1528,37 @@ function displaySummary(data) {
         return;
     }
     summaryContainer.innerHTML = '';
-    
+
     for (const [column, stats] of Object.entries(data)) {
         const card = document.createElement('div');
         card.className = 'card mb-3 shadow-sm';
-        
+
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header bg-primary text-white';
         cardHeader.textContent = column;
-        
+
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body';
-        
+
         const statsList = document.createElement('ul');
         statsList.className = 'list-group list-group-flush';
-        
+
         for (const [stat, value] of Object.entries(stats)) {
             const listItem = document.createElement('li');
             listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-            
+
             const statName = document.createElement('span');
             statName.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
-            
+
             const statValue = document.createElement('span');
             statValue.className = 'badge bg-primary rounded-pill';
             statValue.textContent = typeof value === 'number' ? value.toFixed(2) : value;
-            
+
             listItem.appendChild(statName);
             listItem.appendChild(statValue);
             statsList.appendChild(listItem);
         }
-        
+
         cardBody.appendChild(statsList);
         card.appendChild(cardHeader);
         card.appendChild(cardBody);
@@ -1519,14 +1585,14 @@ function updateGroupChart(data, groupColumn) {
         return;
     }
     const ctx = groupCanvas.getContext('2d');
-    
+
     const labels = data.map(item => item[groupColumn] || 'Unknown');
     const counts = data.map(item => item.count || 0);
-    
+
     if (groupChart) {
         groupChart.destroy();
     }
-    
+
     groupChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1568,23 +1634,23 @@ function updateGroupChart(data, groupColumn) {
 function updateMonthlyStats(data) {
     const monthlyStats = {};
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+
     // Initialize monthly stats
     data.forEach(candidate => {
         let dateStr = candidate['Date'] || candidate['Timestamp'] || '';
         if (!dateStr) return;
-        
+
         // Parse date - handle different formats
         let date;
         if (dateStr.includes(' ')) {
             dateStr = dateStr.split(' ')[0]; // Take only date part
         }
         date = new Date(dateStr);
-        
+
         if (isNaN(date.getTime())) return;
-        
+
         const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-        
+
         if (!monthlyStats[monthKey]) {
             monthlyStats[monthKey] = {
                 applicants: 0,
@@ -1595,9 +1661,9 @@ function updateMonthlyStats(data) {
                 feedbackGiven: 0
             };
         }
-        
+
         monthlyStats[monthKey].applicants++;
-        
+
         switch (candidate['Application Status']) {
             case 'Accepted':
                 monthlyStats[monthKey].accepted++;
@@ -1612,24 +1678,24 @@ function updateMonthlyStats(data) {
                 monthlyStats[monthKey].joined++;
                 break;
         }
-        
+
         if (candidate['Reference Feedback']) {
             monthlyStats[monthKey].feedbackGiven++;
         }
     });
-    
+
     // Sort months chronologically
     const sortedMonths = Object.keys(monthlyStats).sort((a, b) => {
         const [monthA, yearA] = a.split(' ');
         const [monthB, yearB] = b.split(' ');
         return new Date(`${monthA} 1, ${yearA}`) - new Date(`${monthB} 1, ${yearB}`);
     });
-    
+
     // Update table
     const tbody = document.getElementById('monthlyStatsBody');
     const tfoot = document.getElementById('monthlyStatsTotals');
     tbody.innerHTML = '';
-    
+
     const totals = {
         applicants: 0,
         accepted: 0,
@@ -1638,9 +1704,23 @@ function updateMonthlyStats(data) {
         joined: 0,
         feedbackGiven: 0
     };
-    
+
+    const labels = [];
+    const applicantsData = [];
+    const acceptedData = [];
+    const rejectedData = [];
+    const joinedData = [];
+
     sortedMonths.forEach(month => {
         const stats = monthlyStats[month];
+
+        // Prepare chart data
+        labels.push(month);
+        applicantsData.push(stats.applicants);
+        acceptedData.push(stats.accepted);
+        rejectedData.push(stats.rejected);
+        joinedData.push(stats.joined);
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${month}</td>
@@ -1652,13 +1732,13 @@ function updateMonthlyStats(data) {
             <td class="text-center">${stats.feedbackGiven}</td>
         `;
         tbody.appendChild(row);
-        
+
         // Update totals
         Object.keys(totals).forEach(key => {
             totals[key] += stats[key];
         });
     });
-    
+
     // Add totals row
     tfoot.innerHTML = `
         <tr class="table-success fw-bold">
@@ -1671,10 +1751,31 @@ function updateMonthlyStats(data) {
             <td class="text-center">${totals.feedbackGiven}</td>
         </tr>
     `;
-    
+
+    // Render Monthly Stats Chart
+    const monthlyCtx = document.getElementById('monthlyStatsChart');
+    if (monthlyCtx && document.getElementById('viewType').value === 'chart') {
+        if (window.monthlyStatsChartInstance) {
+            window.monthlyStatsChartInstance.destroy();
+        }
+        window.monthlyStatsChartInstance = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Applicants', data: applicantsData, backgroundColor: '#4f46e5', maxBarThickness: 40 },
+                    { label: 'Accepted', data: acceptedData, backgroundColor: '#10b981', maxBarThickness: 40 },
+                    { label: 'Rejected', data: rejectedData, backgroundColor: '#ef4444', maxBarThickness: 40 },
+                    { label: 'Joined', data: joinedData, backgroundColor: '#3b82f6', maxBarThickness: 40 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
     // Update key metrics
     updateKeyMetrics(totals, data);
-    
+
     // Update position statistics
     updatePositionStats(data);
 }
@@ -1682,43 +1783,52 @@ function updateMonthlyStats(data) {
 // Update Position Statistics Table
 function updatePositionStats(data) {
     const positionStats = {};
-    
+
     // Count applicants and joined by position
     data.forEach(candidate => {
         const position = candidate['Interested Position'] || 'Not Specified';
-        
+
         if (!positionStats[position]) {
             positionStats[position] = {
                 applied: 0,
                 joined: 0
             };
         }
-        
+
         positionStats[position].applied++;
-        
+
         if (candidate['Application Status'] === 'Joined') {
             positionStats[position].joined++;
         }
     });
-    
+
     // Sort positions by number of applicants (descending)
     const sortedPositions = Object.keys(positionStats).sort((a, b) => {
         return positionStats[b].applied - positionStats[a].applied;
     });
-    
+
     // Update table
     const tbody = document.getElementById('positionStatsBody');
     if (!tbody) return;
-    
+
     tbody.innerHTML = '';
-    
+
     if (sortedPositions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No position data available</td></tr>';
         return;
     }
-    
+
+    const labels = [];
+    const appliedData = [];
+    const joinedData = [];
+
     sortedPositions.forEach(position => {
         const stats = positionStats[position];
+
+        labels.push(position);
+        appliedData.push(stats.applied);
+        joinedData.push(stats.joined);
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td style="font-weight: 500; color: #1f2937;">${position}</td>
@@ -1727,6 +1837,25 @@ function updatePositionStats(data) {
         `;
         tbody.appendChild(row);
     });
+
+    // Render Position Stats Chart
+    const positionCtx = document.getElementById('positionStatsChart');
+    if (positionCtx && document.getElementById('viewType').value === 'chart') {
+        if (window.positionStatsChartInstance) {
+            window.positionStatsChartInstance.destroy();
+        }
+        window.positionStatsChartInstance = new Chart(positionCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Applied', data: appliedData, backgroundColor: '#5b5fef', maxBarThickness: 40 },
+                    { label: 'Joined', data: joinedData, backgroundColor: '#10b981', maxBarThickness: 40 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
 }
 
 function updateKeyMetrics(totals, data) {
@@ -1740,7 +1869,7 @@ function updateKeyMetrics(totals, data) {
             { label: 'Currently In Notice', value: totals.inNotice },
             { label: 'Total Joined', value: totals.joined }
         ];
-        
+
         metricsContainer.innerHTML = metrics.map(metric => `
             <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center">
@@ -1782,63 +1911,84 @@ function updateKeyMetrics(totals, data) {
             }
         });
 
+        // Numeric View: Use Ordered List for simple stats (Overall & Remarks)
         metricsPanel.innerHTML = `
-            <table class="metrics-table">
-                <thead>
-                    <tr>
-                        <th>Metric</th>
-                        <th style="text-align: right;">Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="metric-row-metrics">
-                        <td class="metric-label">Total Applicants</td>
-                        <td class="metric-value">${totals.applicants}</td>
-                    </tr>
-                    <tr class="metric-row-metrics">
-                        <td class="metric-label">Total Accepted</td>
-                        <td class="metric-value">${totals.accepted}</td>
-                    </tr>
-                    <tr class="metric-row-metrics">
-                        <td class="metric-label">Total Rejected</td>
-                        <td class="metric-value">${totals.rejected}</td>
-                    </tr>
-                    <tr class="metric-row-metrics">
-                        <td class="metric-label">Total In Notice</td>
-                        <td class="metric-value">${totals.inNotice}</td>
-                    </tr>
-                    <tr class="metric-row-metrics">
-                        <td class="metric-label">Total Joined</td>
-                        <td class="metric-value">${totals.joined}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="metrics-section-header">Remarks</div>
-            <table class="metrics-table">
-                <tbody>
-                    <tr class="metric-row-hr">
-                        <td class="metric-label">Initial Screening</td>
-                        <td class="metric-value">${initialScreeningCount}</td>
-                    </tr>
-                    <tr class="metric-row-hr">
-                        <td class="metric-label">Round 1 Remarks</td>
-                        <td class="metric-value">${round1RemarksCount}</td>
-                    </tr>
-                    <tr class="metric-row-hr">
-                        <td class="metric-label">Round 2 Remarks</td>
-                        <td class="metric-value">${round2RemarksCount}</td>
-                    </tr>
-                    <tr class="metric-row-hr">
-                        <td class="metric-label">Final Remarks</td>
-                        <td class="metric-value">${finalRemarksCount}</td>
-                    </tr>
-                    <tr class="metric-row-hr">
-                        <td class="metric-label">Remarks</td>
-                        <td class="metric-value">${remarksCount}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mb-3">
+                <h6 class="fw-bold">Overall Status</h6>
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Total Applicants</div></div>
+                        <span class="badge bg-primary rounded-pill">${totals.applicants}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Total Accepted</div></div>
+                        <span class="badge bg-success rounded-pill">${totals.accepted}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Total Rejected</div></div>
+                        <span class="badge bg-danger rounded-pill">${totals.rejected}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Total In Notice</div></div>
+                        <span class="badge bg-warning text-dark rounded-pill">${totals.inNotice}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Total Joined</div></div>
+                        <span class="badge bg-info text-dark rounded-pill">${totals.joined}</span>
+                    </li>
+                </ol>
+            </div>
+            <div>
+                <h6 class="fw-bold">Remarks Count</h6>
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Initial Screening</div></div>
+                        <span class="badge bg-secondary rounded-pill">${initialScreeningCount}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Round 1 Remarks</div></div>
+                        <span class="badge bg-secondary rounded-pill">${round1RemarksCount}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Round 2 Remarks</div></div>
+                        <span class="badge bg-secondary rounded-pill">${round2RemarksCount}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Final Remarks</div></div>
+                        <span class="badge bg-secondary rounded-pill">${finalRemarksCount}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto"><div class="fw-bold">Remarks</div></div>
+                        <span class="badge bg-secondary rounded-pill">${remarksCount}</span>
+                    </li>
+                </ol>
+            </div>
         `;
+
+        // Chart View: Render Metrics Chart
+        const metricsCtx = document.getElementById('metricsChart');
+        if (metricsCtx && document.getElementById('viewType').value === 'chart') {
+            if (window.metricsChartInstance) {
+                window.metricsChartInstance.destroy();
+            }
+            window.metricsChartInstance = new Chart(metricsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Accepted', 'Rejected', 'In Notice', 'Joined', 'Others'],
+                    datasets: [{
+                        data: [
+                            totals.accepted,
+                            totals.rejected,
+                            totals.inNotice,
+                            totals.joined,
+                            totals.applicants - (totals.accepted + totals.rejected + totals.inNotice + totals.joined)
+                        ],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#cbd5e1']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
     }
 }
 
@@ -1850,47 +2000,83 @@ function updateApplicationStatusChart(data) {
         'In Notice': 0,
         'Joined': 0
     };
-    
+
     data.forEach(candidate => {
         if (statusCounts.hasOwnProperty(candidate['Application Status'])) {
             statusCounts[candidate['Application Status']]++;
         }
     });
-    
-    const ctx = document.getElementById('applicationStatusChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(statusCounts),
-            datasets: [{
-                data: Object.values(statusCounts),
-                backgroundColor: [
-                    '#4f46e5',
-                    '#10b981',
-                    '#ef4444',
-                    '#f59e0b',
-                    '#3b82f6'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+
+    // Populate Numeric View
+    const numericContainer = document.getElementById('applicationStatusNumeric');
+    if (numericContainer) {
+        numericContainer.innerHTML = `
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto"><div class="fw-bold">Total Applicants</div></div>
+                    <span class="badge bg-primary rounded-pill">${statusCounts['Total Applicants']}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto"><div class="fw-bold">Accepted</div></div>
+                    <span class="badge bg-success rounded-pill">${statusCounts['Accepted']}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto"><div class="fw-bold">Rejected</div></div>
+                    <span class="badge bg-danger rounded-pill">${statusCounts['Rejected']}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto"><div class="fw-bold">In Notice</div></div>
+                    <span class="badge bg-warning text-dark rounded-pill">${statusCounts['In Notice']}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto"><div class="fw-bold">Joined</div></div>
+                    <span class="badge bg-info text-dark rounded-pill">${statusCounts['Joined']}</span>
+                </li>
+            </ol>
+        `;
+    }
+
+    // Render Chart if in Chart View
+    const ctx = document.getElementById('applicationStatusChart');
+    if (ctx && document.getElementById('viewType').value === 'chart') {
+        if (window.applicationStatusChartInstance) {
+            window.applicationStatusChartInstance.destroy();
+        }
+        window.applicationStatusChartInstance = new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: [
+                        '#4f46e5',
+                        '#10b981',
+                        '#ef4444',
+                        '#f59e0b',
+                        '#3b82f6'
+                    ],
+                    maxBarThickness: 40
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 function updateReferenceFeedbackChart(data) {
@@ -1900,7 +2086,7 @@ function updateReferenceFeedbackChart(data) {
         '1 Given': 0,
         '0 Given': 0
     };
-    
+
     data.forEach(candidate => {
         const feedback = candidate['Reference Feedback'] || '';
         const count = feedback.split(',').filter(f => f.trim()).length;
@@ -1918,7 +2104,7 @@ function updateReferenceFeedbackChart(data) {
                 feedbackCounts['0 Given']++;
         }
     });
-    
+
     const ctx = document.getElementById('referenceFeedbackChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -1964,7 +2150,7 @@ function updateOverallDistributionChart(data) {
         }
         months[monthKey]++;
     });
-    
+
     const ctx = document.getElementById('overallDistributionChart').getContext('2d');
     new Chart(ctx, {
         type: 'doughnut',
@@ -2012,19 +2198,19 @@ let monthlyTrendsChart = null;
 // Interview Status Pie Chart
 function updateInterviewStatusChart(data) {
     const statusCounts = {};
-    
+
     data.forEach(candidate => {
         const status = candidate['Interview Status'] || 'Not Specified';
         statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
-    
+
     const ctx = document.getElementById('interviewStatusChart');
     if (!ctx) return;
-    
+
     if (interviewStatusChart) {
         interviewStatusChart.destroy();
     }
-    
+
     interviewStatusChart = new Chart(ctx.getContext('2d'), {
         type: 'pie',
         data: {
@@ -2052,19 +2238,19 @@ function updateInterviewStatusChart(data) {
 // Experience Level Chart
 function updateExperienceChart(data) {
     const experienceCounts = {};
-    
+
     data.forEach(candidate => {
         const exp = candidate['Total Years of Experience'] || 'Not Specified';
         experienceCounts[exp] = (experienceCounts[exp] || 0) + 1;
     });
-    
+
     const ctx = document.getElementById('experienceChart');
     if (!ctx) return;
-    
+
     if (experienceChart) {
         experienceChart.destroy();
     }
-    
+
     experienceChart = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
@@ -2100,19 +2286,19 @@ function updateExperienceChart(data) {
 // Referral Source Chart
 function updateReferralSourceChart(data) {
     const referralCounts = {};
-    
+
     data.forEach(candidate => {
         const referral = candidate['Referred By'] || 'Not Specified';
         referralCounts[referral] = (referralCounts[referral] || 0) + 1;
     });
-    
+
     const ctx = document.getElementById('referralSourceChart');
     if (!ctx) return;
-    
+
     if (referralSourceChart) {
         referralSourceChart.destroy();
     }
-    
+
     referralSourceChart = new Chart(ctx.getContext('2d'), {
         type: 'pie',
         data: {
@@ -2140,19 +2326,19 @@ function updateReferralSourceChart(data) {
 // Notice Period Chart
 function updateNoticePeriodChart(data) {
     const noticeCounts = {};
-    
+
     data.forEach(candidate => {
         const notice = candidate['Notice Period'] || 'Not Specified';
         noticeCounts[notice] = (noticeCounts[notice] || 0) + 1;
     });
-    
+
     const ctx = document.getElementById('noticePeriodChart');
     if (!ctx) return;
-    
+
     if (noticePeriodChart) {
         noticePeriodChart.destroy();
     }
-    
+
     noticePeriodChart = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
@@ -2188,22 +2374,22 @@ function updateNoticePeriodChart(data) {
 // Monthly Trends Line Chart
 function updateMonthlyTrendsChart(data) {
     const monthlyData = {};
-    
+
     data.forEach(candidate => {
         let dateStr = candidate['Date'] || candidate['Timestamp'] || '';
         if (!dateStr) return;
-        
+
         // Parse date - handle different formats
         let date;
         if (dateStr.includes(' ')) {
             dateStr = dateStr.split(' ')[0]; // Take only date part
         }
         date = new Date(dateStr);
-        
+
         if (isNaN(date.getTime())) return;
-        
+
         const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-        
+
         if (!monthlyData[monthKey]) {
             monthlyData[monthKey] = {
                 total: 0,
@@ -2212,29 +2398,29 @@ function updateMonthlyTrendsChart(data) {
                 joined: 0
             };
         }
-        
+
         monthlyData[monthKey].total++;
-        
+
         const appStatus = candidate['Application Status'] || '';
         if (appStatus === 'Accepted') monthlyData[monthKey].accepted++;
         if (appStatus === 'Rejected') monthlyData[monthKey].rejected++;
         if (appStatus === 'Joined') monthlyData[monthKey].joined++;
     });
-    
+
     // Sort months chronologically
     const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
         const [monthA, yearA] = a.split(' ');
         const [monthB, yearB] = b.split(' ');
         return new Date(`${monthA} 1, ${yearA}`) - new Date(`${monthB} 1, ${yearB}`);
     });
-    
+
     const ctx = document.getElementById('monthlyTrendsChart');
     if (!ctx) return;
-    
+
     if (monthlyTrendsChart) {
         monthlyTrendsChart.destroy();
     }
-    
+
     monthlyTrendsChart = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
@@ -2304,12 +2490,12 @@ async function refreshData() {
         const response = await fetch('/api/data');
         const data = await response.json();
         console.log('Data refreshed:', data); // Add this line to log the refreshed data
-        
+
         // Store original data when refreshed
         originalTableData = JSON.parse(JSON.stringify(data.data)); // Deep copy
         currentIsAdmin = data.is_admin;
         updateAdminControls(data.is_admin);
-        
+
         // Apply current filter if any
         const positionFilterElement = document.getElementById('positionFilter');
         const statusFilterElement = document.getElementById('statusFilter');
@@ -2321,7 +2507,7 @@ async function refreshData() {
             // Update table
             populateTable(data.data, data.is_admin);
         }
-        
+
         // Update analytics if on analytics tab
         if (document.getElementById('analysisTab') && document.getElementById('analysisTab').classList.contains('active')) {
             updateMonthlyStats(data.data);
@@ -2345,7 +2531,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
 
     // Show only user-visible columns for non-admin; full order for admin
     let fieldsToDisplay = isAdmin ? FIELD_ORDER : ['Date', 'Name', 'Email ID', 'Interested Position', 'Current Role', 'Current Organization', 'Current Location', 'Resume', 'Referred By', 'Interview Status', 'Application Status', 'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks'];
-    
+
     // Define editable fields based on user role
     // Non-admin users can edit only Initial Screening and Round 1 Remarks
     const editableFields = isAdmin ? null : ['Initial Screening', 'Round 1 Remarks']; // null means all fields editable for admin
@@ -2401,18 +2587,18 @@ function showCandidateDetails(candidate, index, isAdmin) {
                     // Always show as dropdown; disable for non-admin users
                     const statusOptions = dropdownOptions[field] || [];
                     let optionsHTML = '';
-                    
+
                     // Add empty/null option for Reject Mail Sent
                     if (field === 'Reject Mail Sent') {
                         const emptySelected = !candidate[field] || candidate[field] === '' ? 'selected' : '';
                         optionsHTML += `<option value="" ${emptySelected}></option>`;
                     }
-                    
+
                     statusOptions.forEach(option => {
                         const selected = candidate[field] === option ? 'selected' : '';
                         optionsHTML += `<option value="${option}" ${selected}>${option}</option>`;
                     });
-                    
+
                     detailsHTML += `
                         <div class="candidate-detail-item" data-candidate-index="${index}" data-field-name="${field}" data-editable="${isEditable}">
                             <span class="candidate-detail-label">${field}:</span>
@@ -2428,7 +2614,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
                     } else if (field === 'Resume' || field === 'LinkedIn Profile') {
                         inputType = 'url';
                     }
-                    
+
                     // Check if field is editable
                     const isEditable = editableFields === null || editableFields.includes(field);
                     const editableClass = isEditable ? 'editable-field' : 'readonly-field';
@@ -2466,7 +2652,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
                     const isEditable = isAdmin;
                     const editableClass = isEditable ? 'editable-field' : 'readonly-field';
                     const cursorStyle = isEditable ? 'cursor: pointer;' : 'cursor: default;';
-                    
+
                     detailsHTML += `
                         <div class="candidate-detail-item" data-candidate-index="${index}" data-field-name="${field}" data-editable="${isEditable}">
                             <span class="candidate-detail-label">${field}:</span>
@@ -2488,7 +2674,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
         const fieldName = item.querySelector('.candidate-detail-label').textContent.replace(':', '').trim();
         const isEditable = item.dataset.editable === 'true';
         const isStatusField = fieldName === 'Interview Status' || fieldName === 'Application Status';
-        
+
         // Handle status fields (always visible as dropdowns)
         if (isStatusField) {
             const statusSelect = item.querySelector('select');
@@ -2497,10 +2683,10 @@ function showCandidateDetails(candidate, index, isAdmin) {
                 statusSelect.addEventListener('change', () => {
                     const newValue = statusSelect.value;
                     const candidateIndex = item.dataset.candidateIndex ?? index;
-                    
+
                     const updatedCandidate = {};
                     updatedCandidate[fieldName] = newValue;
-                    
+
                     fetch(`/api/data/${candidateIndex}`, {
                         method: 'PUT',
                         headers: {
@@ -2508,23 +2694,23 @@ function showCandidateDetails(candidate, index, isAdmin) {
                         },
                         body: JSON.stringify(updatedCandidate),
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showToast('Candidate updated successfully!', 'success');
-                            refreshData();
-                        } else {
-                            showToast(`Error updating candidate: ${data.message}`, 'danger');
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                showToast('Candidate updated successfully!', 'success');
+                                refreshData();
+                            } else {
+                                showToast(`Error updating candidate: ${data.message}`, 'danger');
+                                // Revert dropdown value on error
+                                statusSelect.value = candidate[fieldName] || '';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error saving candidate:', error);
+                            showToast('Error saving candidate.', 'danger');
                             // Revert dropdown value on error
                             statusSelect.value = candidate[fieldName] || '';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error saving candidate:', error);
-                        showToast('Error saving candidate.', 'danger');
-                        // Revert dropdown value on error
-                        statusSelect.value = candidate[fieldName] || '';
-                    });
+                        });
                 });
             }
         } else {
@@ -2536,7 +2722,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
                     if (e.target.tagName === 'A' || e.target.closest('a')) {
                         return;
                     }
-                    
+
                     displaySpan.style.display = 'none';
                     editInput.style.display = 'block';
                     editInput.removeAttribute('readonly');
@@ -2548,7 +2734,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
                     const newValue = editInput.value;
                     displaySpan.style.display = 'block';
                     editInput.style.display = 'none';
-                    
+
                     // Update display value based on field type
                     if (fieldName === 'Resume' && newValue && newValue.toString().startsWith('http')) {
                         displaySpan.innerHTML = `<a href="${newValue}" target="_blank" class="btn btn-outline-primary btn-sm">
@@ -2574,19 +2760,19 @@ function showCandidateDetails(candidate, index, isAdmin) {
                         },
                         body: JSON.stringify(updatedCandidate),
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            showToast('Candidate updated successfully!', 'success');
-                            refreshData();
-                        } else {
-                            showToast(`Error updating candidate: ${data.message}`, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error saving candidate:', error);
-                        showToast('Error saving candidate.', 'danger');
-                    });
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                showToast('Candidate updated successfully!', 'success');
+                                refreshData();
+                            } else {
+                                showToast(`Error updating candidate: ${data.message}`, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error saving candidate:', error);
+                            showToast('Error saving candidate.', 'danger');
+                        });
                 });
             }
         }
@@ -2612,7 +2798,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
     function toggleEditMode(isEditing, isAdmin) {
         // Define editable fields for non-admin users
         const editableFieldsForUser = ['Initial Screening', 'Round 1 Remarks'];
-        
+
         document.querySelectorAll('.candidate-detail-item').forEach(item => {
             const displaySpan = item.querySelector('.display-mode');
             const editInput = item.querySelector('.edit-mode');
@@ -2620,7 +2806,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
             const isEditable = item.dataset.editable === 'true';
             const fieldLabel = item.querySelector('.candidate-detail-label');
             const fieldName = fieldLabel ? fieldLabel.textContent.replace(':', '').trim() : '';
-            
+
             // For non-admin users, only allow editing of specific fields
             if (!isAdmin && !editableFieldsForUser.includes(fieldName)) {
                 // Keep non-editable fields as read-only display
@@ -2638,7 +2824,7 @@ function showCandidateDetails(candidate, index, isAdmin) {
                 }
                 return; // Skip non-editable fields for non-admin users
             }
-            
+
             // Handle editable fields
             if (displaySpan && editInput) {
                 if (isEditing) {
@@ -2716,22 +2902,22 @@ function showCandidateDetails(candidate, index, isAdmin) {
                     },
                     body: JSON.stringify(updatedCandidate),
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        showToast('Candidate updated successfully!', 'success');
-                        
-                        bootstrap.Modal.getInstance(modal).hide(); // Close the modal
-                        // Immediately refresh table so changes reflect without manual reload
-                        refreshData();
-                    } else {
-                        showToast(`Error updating candidate: ${data.message}`, 'danger');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error saving candidate:', error);
-                    showToast('Error saving candidate.', 'danger');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showToast('Candidate updated successfully!', 'success');
+
+                            bootstrap.Modal.getInstance(modal).hide(); // Close the modal
+                            // Immediately refresh table so changes reflect without manual reload
+                            refreshData();
+                        } else {
+                            showToast(`Error updating candidate: ${data.message}`, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving candidate:', error);
+                        showToast('Error saving candidate.', 'danger');
+                    });
             } else {
                 console.error('Candidate index not found for saving.');
                 showToast('Error: Candidate index not found.', 'danger');
@@ -2770,7 +2956,7 @@ function showToast(message, type) {
     const toast = new bootstrap.Toast(toastContainer);
     toast.show();
     // Remove toast after it hides
-    toastContainer.addEventListener('hidden.bs.toast', () => { 
+    toastContainer.addEventListener('hidden.bs.toast', () => {
         toastContainer.remove();
     });
 }

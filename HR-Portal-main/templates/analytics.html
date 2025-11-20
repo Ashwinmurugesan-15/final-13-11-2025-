@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -142,11 +143,13 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
-                <img src="/static/images/GuhaTekHorizontalLarge.svg" alt="GuhaTek Logo" style="height: 40px; margin-right: 1rem;">
+                <img src="/static/images/GuhaTekHorizontalLarge.svg" alt="GuhaTek Logo"
+                    style="height: 40px; margin-right: 1rem;">
                 Candidate Tracking System
             </a>
             <div class="navbar-nav ms-auto">
@@ -158,6 +161,7 @@
                     <i class="bi bi-graph-up"></i>
                     Analytics
                 </a>
+
                 <a class="nav-link" href="/users">
                     <i class="bi bi-people"></i>
                     User Management
@@ -173,51 +177,39 @@
     <div class="page-container">
         <div class="page-header">
             <h1 class="page-title">Candidate Analytics</h1>
-            <small style="color: #666;">Last updated: <?php echo date('Y-m-d H:i:s'); ?></small>
+            <div style="display: flex; align-items: center; z-index: 10;">
+                <label for="viewType" class="me-2"
+                    style="margin-right: 10px; white-space: nowrap; font-weight: bold;">View Type:</label>
+                <select id="viewType" class="form-select"
+                    style="width: auto; min-width: 200px; display: block; position: relative;">
+                    <option value="numeric" selected>Numeric</option>
+                    <option value="chart">Chart</option>
+                </select>
+            </div>
+
         </div>
 
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Overall Application Status</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered mb-0">
-                        <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
-                        <tbody id="overallAnalyticsBody">
-                            <!-- Data will be loaded here by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
+                <ol id="overallAnalyticsList" class="list-group list-group-numbered numeric-view"></ol>
+                <div id="overallAnalyticsChart" style="display: none; height: 300px;"></div>
             </div>
         </div>
 
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Hiring Funnel Status</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered mb-0">
-                        <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
-                        <tbody id="hiringFunnelBody">
-                            <!-- Data will be loaded here by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
+                <ol id="hiringFunnelList" class="list-group list-group-numbered numeric-view"></ol>
+                <div id="hiringFunnelChart" style="display: none; height: 300px;"></div>
             </div>
         </div>
 
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Monthly Statistics</h5>
-                <div class="table-responsive">
+
+                <div class="table-responsive numeric-view">
                     <table class="table table-bordered mb-0">
                         <thead>
                             <tr>
@@ -234,15 +226,18 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="monthlyStatisticsChart" style="display: none; height: 300px;"></div>
             </div>
         </div>
 
         <!-- ============================================= -->
         <!-- POSITION STATISTICS TABLE STARTS HERE        -->
         <!-- ============================================= -->
-        <div class="card mb-4" style="border: 5px solid #d8b4d8; background: linear-gradient(to right, #fff 0%, #f9f5f9 100%); box-shadow: 0 4px 12px rgba(216, 180, 216, 0.5);">
+        <div class="card mb-4"
+            style="border: 5px solid #d8b4d8; background: linear-gradient(to right, #fff 0%, #f9f5f9 100%); box-shadow: 0 4px 12px rgba(216, 180, 216, 0.5);">
             <div class="card-body">
-                <h5 class="card-title mb-4" style="color: #8b4789; font-weight: 700; font-size: 1.75rem; text-align: center; border-bottom: 3px solid #d8b4d8; padding-bottom: 1rem;">
+                <h5 class="card-title mb-4"
+                    style="color: #8b4789; font-weight: 700; font-size: 1.75rem; text-align: center; border-bottom: 3px solid #d8b4d8; padding-bottom: 1rem;">
                     <i class="bi bi-briefcase-fill"></i> 📊 POSITION STATISTICS TABLE 📊
                 </h5>
                 <div class="table-responsive">
@@ -256,11 +251,14 @@
                         </thead>
                         <tbody id="positionStatisticsBody">
                             <tr style="background-color: #fff3cd;">
-                                <td colspan="3" class="text-center" style="font-weight: bold; color: #856404; padding: 2rem; font-size: 1.2rem;">⏳ LOADING POSITION DATA...</td>
+                                <td colspan="3" class="text-center"
+                                    style="font-weight: bold; color: #856404; padding: 2rem; font-size: 1.2rem;">⏳
+                                    LOADING POSITION DATA...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+                <div id="positionStatisticsChart" style="display: none; height: 300px;"></div>
             </div>
         </div>
         <!-- ============================================= -->
@@ -269,35 +267,444 @@
 
     </div>
 
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // Chart instances
+        let overallAnalyticsChart = null;
+        let hiringFunnelChart = null;
+        let monthlyStatisticsChart = null;
+        let positionStatisticsChart = null;
+
+        function destroyCharts() {
+            console.log('Destroying charts...');
+            if (overallAnalyticsChart) {
+                overallAnalyticsChart.destroy();
+                overallAnalyticsChart = null;
+            }
+            if (hiringFunnelChart) {
+                hiringFunnelChart.destroy();
+                hiringFunnelChart = null;
+            }
+            if (monthlyStatisticsChart) {
+                monthlyStatisticsChart.destroy();
+                monthlyStatisticsChart = null;
+            }
+            if (positionStatisticsChart) {
+                positionStatisticsChart.destroy();
+                positionStatisticsChart = null;
+            }
+        }
+
+        // Function to initialize the dropdown
+        function initializeDropdown() {
+            const viewTypeSelect = document.getElementById('viewType');
+            console.log('viewTypeSelect element:', viewTypeSelect);
+            if (viewTypeSelect) {
+                console.log('Initializing dropdown');
+                // Ensure the dropdown is visible and enabled
+                viewTypeSelect.style.display = 'block';
+                viewTypeSelect.disabled = false;
+
+                // Remove any existing event listeners to prevent duplicates
+                viewTypeSelect.removeEventListener('change', handleViewChange);
+
+                // Add event listener for view change
+                viewTypeSelect.addEventListener('change', handleViewChange);
+
+                // Set default view to numeric
+                if (!viewTypeSelect.value) {
+                    viewTypeSelect.value = 'numeric';
+                }
+                toggleView(viewTypeSelect.value);
+
+                console.log('Dropdown initialized and enabled');
+            } else {
+                console.error('Error: Dropdown element with ID "viewType" not found.');
+            }
+        }
+
+        // Handler for view change event
+        function handleViewChange(event) {
+            console.log('View type changed to:', event.target.value);
+            toggleView(event.target.value);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM loaded, checking if we are on analytics page:', window.location.pathname);
+
+            // Initialize the dropdown immediately
+            initializeDropdown();
+
             if (window.location.pathname === '/analytics') {
+                console.log('Fetching analytics data...');
                 fetchAnalyticsData();
             }
         });
+
+        function toggleView(viewType) {
+            console.log('Toggling view to:', viewType);
+            const numericViews = document.querySelectorAll('.numeric-view');
+            const charts = document.querySelectorAll('[id$="Chart"]');
+
+            if (viewType === 'numeric') {
+                // Show numeric views (lists/tables), hide charts
+                numericViews.forEach(el => {
+                    el.style.display = 'block';
+                });
+                charts.forEach(chart => {
+                    chart.style.display = 'none';
+                });
+                destroyCharts(); // Destroy charts when switching to numeric view
+            } else {
+                // Show charts, hide numeric views
+                numericViews.forEach(el => {
+                    el.style.display = 'none';
+                });
+                charts.forEach(chart => {
+                    chart.style.display = 'block';
+                });
+
+                // Render charts if not already rendered
+                renderCharts();
+            }
+        }
+
+        function renderCharts() {
+            console.log('Rendering charts...');
+            destroyCharts(); // Destroy existing charts before rendering new ones
+            // Render charts only if they haven't been rendered yet
+            if (!overallAnalyticsChart) {
+                console.log('Rendering overall analytics chart');
+                renderOverallAnalyticsChart();
+            }
+            if (!hiringFunnelChart) {
+                console.log('Rendering hiring funnel chart');
+                renderHiringFunnelChart();
+            }
+            if (!monthlyStatisticsChart) {
+                console.log('Rendering monthly statistics chart');
+                renderMonthlyStatisticsChart();
+            }
+            if (!positionStatisticsChart) {
+                console.log('Rendering position statistics chart');
+                renderPositionStatisticsChart();
+            }
+        }
+
+        function renderOverallAnalyticsChart() {
+            const ctx = document.getElementById('overallAnalyticsChart').getContext('2d');
+            // Get data from the list items since table might be hidden or replaced
+            const listItems = document.querySelectorAll('#overallAnalyticsList li');
+
+            const labels = [];
+            const data = [];
+
+            listItems.forEach(item => {
+                // Parse "Metric: Count" format
+                const text = item.textContent;
+                const parts = text.split(':');
+                if (parts.length >= 2) {
+                    labels.push(parts[0].trim());
+                    data.push(parseInt(parts[1].trim()) || 0);
+                }
+            });
+
+            if (labels.length === 0) return;
+
+            overallAnalyticsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Count',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(255, 205, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHiringFunnelChart() {
+            const ctx = document.getElementById('hiringFunnelChart').getContext('2d');
+            const listItems = document.querySelectorAll('#hiringFunnelList li');
+
+            const labels = [];
+            const data = [];
+
+            listItems.forEach(item => {
+                const text = item.textContent;
+                const parts = text.split(':');
+                if (parts.length >= 2) {
+                    labels.push(parts[0].trim());
+                    data.push(parseInt(parts[1].trim()) || 0);
+                }
+            });
+
+            if (labels.length === 0) return;
+
+            hiringFunnelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Count',
+                        data: data,
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderMonthlyStatisticsChart() {
+            const tbody = document.getElementById('monthlyStatisticsBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            if (rows.length === 0) return;
+
+            const months = [];
+            const applicants = [];
+            const accepted = [];
+            const rejected = [];
+            const inNotice = [];
+            const joined = [];
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
+                    months.push(cells[0].textContent);
+                    applicants.push(parseInt(cells[1].textContent) || 0);
+                    accepted.push(parseInt(cells[2].textContent) || 0);
+                    rejected.push(parseInt(cells[3].textContent) || 0);
+                    inNotice.push(parseInt(cells[4].textContent) || 0);
+                    joined.push(parseInt(cells[5].textContent) || 0);
+                }
+            });
+
+            const ctx = document.getElementById('monthlyStatisticsChart').getContext('2d');
+            monthlyStatisticsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Applicants',
+                            data: applicants,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Accepted',
+                            data: accepted,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Rejected',
+                            data: rejected,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: true,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'In Notice',
+                            data: inNotice,
+                            borderColor: 'rgba(255, 205, 86, 1)',
+                            backgroundColor: 'rgba(255, 205, 86, 0.2)',
+                            fill: true,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Joined',
+                            data: joined,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            fill: true,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPositionStatisticsChart() {
+            const tbody = document.getElementById('positionStatisticsBody');
+            const rows = tbody.querySelectorAll('tr:not(:first-child)'); // Exclude the loading row
+
+            if (rows.length === 0) return;
+
+            const positions = [];
+            const applied = [];
+            const joined = [];
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 3) {
+                    positions.push(cells[0].textContent);
+                    applied.push(parseInt(cells[1].textContent) || 0);
+                    joined.push(parseInt(cells[2].textContent) || 0);
+                }
+            });
+
+            // Limit to top 10 positions for better visualization
+            const maxLength = 10;
+            if (positions.length > maxLength) {
+                positions.splice(maxLength);
+                applied.splice(maxLength);
+                joined.splice(maxLength);
+            }
+
+            const ctx = document.getElementById('positionStatisticsChart').getContext('2d');
+            positionStatisticsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: positions,
+                    datasets: [
+                        {
+                            label: 'Applied',
+                            data: applied,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Joined',
+                            data: joined,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         function fetchAnalyticsData() {
             fetch('/api/analytics')
                 .then(response => response.json())
                 .then(data => {
-                    const overallBody = document.getElementById('overallAnalyticsBody');
-                    overallBody.innerHTML = `
-                        <tr><td>Total Applicant</td><td>${data.total_applicant}</td></tr>
-                        <tr><td>Total Rejected</td><td>${data.total_rejected}</td></tr>
-                        <tr><td>No response</td><td>${data.no_response}</td></tr>
-                        <tr><td>Not Interviewed</td><td>${data.not_interviewed}</td></tr>
+                    console.log('Analytics data received:', data);
+
+                    // Populate Overall Analytics List
+                    const overallList = document.getElementById('overallAnalyticsList');
+                    overallList.innerHTML = `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Applicant
+                            <span class="badge bg-primary rounded-pill">${data.total_applicant}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Rejected
+                            <span class="badge bg-danger rounded-pill">${data.total_rejected}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            No response
+                            <span class="badge bg-warning rounded-pill">${data.no_response}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Not Interviewed
+                            <span class="badge bg-secondary rounded-pill">${data.not_interviewed}</span>
+                        </li>
                     `;
 
-                    const hiringFunnelBody = document.getElementById('hiringFunnelBody');
-                    hiringFunnelBody.innerHTML = `
-                        <tr><td>Total Round 2 Completed</td><td>${data.total_round_2_completed}</td></tr>
-                        <tr><td>Didn\'t Join</td><td>${data.did_not_join}</td></tr>
-                        <tr><td>On Hold</td><td>${data.on_hold}</td></tr>
-                        <tr><td>Accepted waiting Reference</td><td>${data.accepted_waiting_reference}</td></tr>
-                        <tr><td>Total In Notice/Yet to join</td><td>${data.total_in_notice_yet_to_join}</td></tr>
-                        <tr><td>Total Joined</td><td>${data.total_joined}</td></tr>
-                        <tr><td>Intern</td><td>${data.intern}</td></tr>
+                    // Populate Hiring Funnel List
+                    const funnelList = document.getElementById('hiringFunnelList');
+                    funnelList.innerHTML = `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Round 2 Completed
+                            <span class="badge bg-primary rounded-pill">${data.total_round_2_completed}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Didn't Join
+                            <span class="badge bg-danger rounded-pill">${data.did_not_join}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            On Hold
+                            <span class="badge bg-warning rounded-pill">${data.on_hold}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Accepted waiting Reference
+                            <span class="badge bg-info rounded-pill">${data.accepted_waiting_reference}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total In Notice/Yet to join
+                            <span class="badge bg-secondary rounded-pill">${data.total_in_notice_yet_to_join}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Joined
+                            <span class="badge bg-success rounded-pill">${data.total_joined}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Intern
+                            <span class="badge bg-dark rounded-pill">${data.intern}</span>
+                        </li>
                     `;
 
                     const monthlyStatisticsBody = document.getElementById('monthlyStatisticsBody');
@@ -316,13 +723,9 @@
                         monthlyStatisticsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No monthly data available</td></tr>';
                     }
 
-                    // POSITION STATISTICS - RENDERING BELOW
+                    // POSITION STATISTICS
                     const positionStatisticsBody = document.getElementById('positionStatisticsBody');
-                    console.log('=== POSITION STATISTICS DEBUG ===');
-                    console.log('Full API Response:', data);
-                    console.log('Position Statistics Data:', data.position_statistics);
-                    console.log('Table Element Found:', !!positionStatisticsBody);
-                    
+
                     if (data.position_statistics && data.position_statistics.length > 0) {
                         const tableHTML = data.position_statistics.map(item => `
                             <tr style="background-color: white;">
@@ -332,21 +735,19 @@
                             </tr>
                         `).join('');
                         positionStatisticsBody.innerHTML = tableHTML;
-                        console.log('✅ Position Statistics Rendered Successfully');
-                        console.log('HTML Generated:', tableHTML);
                     } else {
                         positionStatisticsBody.innerHTML = '<tr><td colspan="3" class="text-center" style="color: red; font-weight: bold;">⚠️ No position data available in Excel file</td></tr>';
-                        console.log('❌ No position data available');
                     }
+
+                    // Reinitialize the dropdown after data is loaded to ensure it's working
+                    initializeDropdown();
                 })
                 .catch(error => {
                     console.error('Error loading analytics data:', error);
-                    document.getElementById('overallAnalyticsBody').innerHTML = '<tr><td colspan="2" class="text-center text-danger">Error loading data</td></tr>';
-                    document.getElementById('hiringFunnelBody').innerHTML = '<tr><td colspan="2" class="text-center text-danger">Error loading data</td></tr>';
-                    document.getElementById('monthlyStatisticsBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
-                    document.getElementById('positionStatisticsBody').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error loading data</td></tr>';
+                    // Error handling...
                 });
         }
     </script>
 </body>
+
 </html>
