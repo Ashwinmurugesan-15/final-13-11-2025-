@@ -25,7 +25,7 @@ const FIELD_ORDER = [
     // Stage-specific remarks captured separately in forms/details
     'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks', 'Final Remarks',
     // General/legacy remarks
-    'Remarks', 'Reject Mail Sent', 'Month Count',
+    'Remarks', 'Reject Mail Sent'
 ];
 
 // Predefined dropdown options
@@ -78,11 +78,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateBtn = document.getElementById('updateDataBtn');
     const positionFilter = document.getElementById('positionFilter');
     const statusFilter = document.getElementById('statusFilter');
+    const locationFilter = document.getElementById('locationFilter');
+    const experienceFilter = document.getElementById('experienceFilter');
+    const noticePeriodFilter = document.getElementById('noticePeriodFilter');
 
     if (saveBtn) saveBtn.addEventListener('click', saveNewRecord);
     if (updateBtn) updateBtn.addEventListener('click', updateRecord);
     if (positionFilter) positionFilter.addEventListener('change', applyTableFilters);
     if (statusFilter) statusFilter.addEventListener('change', applyTableFilters);
+    if (locationFilter) locationFilter.addEventListener('change', applyTableFilters);
+    if (experienceFilter) experienceFilter.addEventListener('change', applyTableFilters);
+    if (noticePeriodFilter) noticePeriodFilter.addEventListener('change', applyTableFilters);
+
+    const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+    if (toggleFiltersBtn) {
+        toggleFiltersBtn.style.display = 'inline-block'; // Make the button visible
+        toggleFiltersBtn.addEventListener('click', toggleFilterVisibility);
+    }
 
     // Update sticky column positions on window resize
     let resizeTimeout;
@@ -142,6 +154,17 @@ document.addEventListener('DOMContentLoaded', function () {
         viewTypeSelect.addEventListener('change', function () {
             toggleView(this.value);
         });
+    }
+
+    function toggleFilterVisibility() {
+        const filterContainer = document.getElementById('filterContainer');
+        if (filterContainer) {
+            if (filterContainer.style.display === 'none' || filterContainer.style.display === '') {
+                filterContainer.style.display = 'flex'; // Or 'block' depending on original display
+            } else {
+                filterContainer.style.display = 'none';
+            }
+        }
     }
 });
 
@@ -556,14 +579,23 @@ function filterTableByPosition() {
 function applyTableFilters() {
     const positionFilter = document.getElementById('positionFilter');
     const statusFilter = document.getElementById('statusFilter');
+    const locationFilter = document.getElementById('locationFilter');
+    const experienceFilter = document.getElementById('experienceFilter');
+    const noticePeriodFilter = document.getElementById('noticePeriodFilter');
 
     const selectedPosition = positionFilter ? positionFilter.value : '';
     const selectedStatus = statusFilter ? statusFilter.value : '';
+    const selectedLocation = locationFilter ? locationFilter.value : '';
+    const selectedExperience = experienceFilter ? experienceFilter.value : '';
+    const selectedNoticePeriod = noticePeriodFilter ? noticePeriodFilter.value : '';
 
-    const hasPositionFilter = selectedPosition !== undefined && selectedPosition !== null && selectedPosition !== '';
-    const hasStatusFilter = selectedStatus !== undefined && selectedStatus !== null && selectedStatus !== '';
+    const hasPositionFilter = selectedPosition !== '';
+    const hasStatusFilter = selectedStatus !== '';
+    const hasLocationFilter = selectedLocation !== '';
+    const hasExperienceFilter = selectedExperience !== '';
+    const hasNoticePeriodFilter = selectedNoticePeriod !== '';
 
-    if (!hasPositionFilter && !hasStatusFilter) {
+    if (!hasPositionFilter && !hasStatusFilter && !hasLocationFilter && !hasExperienceFilter && !hasNoticePeriodFilter) {
         populateTable(originalTableData, currentIsAdmin);
         return;
     }
@@ -576,22 +608,36 @@ function applyTableFilters() {
         .filter(row => {
             const interestedPosition = row['Interested Position'] || '';
             const applicationStatus = row['Application Status'] || '';
+            const candidateLocation = row['Location Preference'] || '';
+            const totalYearsExperience = parseFloat(row['Total Years of Experience']) || 0;
+            const candidateNoticePeriod = row['Notice Period'] || '';
 
-            const matchesPosition = !hasPositionFilter || interestedPosition === selectedPosition;
+            const matchesPosition = !hasPositionFilter || (interestedPosition.trim().toLowerCase() === selectedPosition.trim().toLowerCase());
 
-            // Handle the EMPTY option for application status
             let matchesStatus = true;
             if (hasStatusFilter) {
                 if (selectedStatus === 'EMPTY') {
-                    // Match rows where Application Status is empty/null/undefined
                     matchesStatus = !applicationStatus || applicationStatus === '';
                 } else {
-                    // Normal matching for other status values
                     matchesStatus = applicationStatus === selectedStatus;
                 }
             }
 
-            return matchesPosition && matchesStatus;
+            const matchesLocation = !hasLocationFilter || candidateLocation === selectedLocation;
+
+            let matchesExperience = true;
+            if (hasExperienceFilter) {
+                if (selectedExperience === '10+') {
+                    matchesExperience = totalYearsExperience >= 10;
+                } else if (selectedExperience !== '') {
+                    const [minExp, maxExp] = selectedExperience.split('-').map(Number);
+                    matchesExperience = totalYearsExperience >= minExp && totalYearsExperience <= maxExp;
+                }
+            }
+
+            const matchesNoticePeriod = !hasNoticePeriodFilter || (candidateNoticePeriod.replace(/ days?$/, '') === selectedNoticePeriod.replace(/days?$/, ''));
+
+            return matchesPosition && matchesStatus && matchesLocation && matchesExperience && matchesNoticePeriod;
         });
 
     populateTable(filteredData, currentIsAdmin);
@@ -659,7 +705,7 @@ function populateTable(data, isAdmin) {
     tableBody.innerHTML = '';
     tableHead.innerHTML = '';
 
-    let columnsToShow = isAdmin ? FIELD_ORDER : ['Date', 'Name', 'Email ID', 'Interested Position', 'Current Role', 'Current Organization', 'Current Location', 'Resume', 'Referred By', 'Interview Status', 'Application Status', 'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks'];
+    let columnsToShow = isAdmin ? FIELD_ORDER : ['Date', 'Name', 'Email ID', 'Interested Position', 'Current Role', 'Current Organization', 'Current Location', 'Total Years of Experience', 'Resume', 'Referred By', 'Interview Status', 'Application Status', 'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks'];
 
     if (data && data.length > 0) {
         const availableColumns = Object.keys(data[0]).filter(column => column !== '_originalIndex');
@@ -1706,7 +1752,6 @@ function updateMonthlyStats(data) {
     };
 
     const labels = [];
-    const applicantsData = [];
     const acceptedData = [];
     const rejectedData = [];
     const joinedData = [];
@@ -1716,7 +1761,6 @@ function updateMonthlyStats(data) {
 
         // Prepare chart data
         labels.push(month);
-        applicantsData.push(stats.applicants);
         acceptedData.push(stats.accepted);
         rejectedData.push(stats.rejected);
         joinedData.push(stats.joined);
@@ -1724,7 +1768,6 @@ function updateMonthlyStats(data) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${month}</td>
-            <td class="text-center">${stats.applicants}</td>
             <td class="text-center">${stats.accepted}</td>
             <td class="text-center">${stats.rejected}</td>
             <td class="text-center">${stats.inNotice}</td>
@@ -1743,7 +1786,6 @@ function updateMonthlyStats(data) {
     tfoot.innerHTML = `
         <tr class="table-success fw-bold">
             <td>Total</td>
-            <td class="text-center">${totals.applicants}</td>
             <td class="text-center">${totals.accepted}</td>
             <td class="text-center">${totals.rejected}</td>
             <td class="text-center">${totals.inNotice}</td>
@@ -1763,7 +1805,6 @@ function updateMonthlyStats(data) {
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Applicants', data: applicantsData, backgroundColor: '#4f46e5', maxBarThickness: 40 },
                     { label: 'Accepted', data: acceptedData, backgroundColor: '#10b981', maxBarThickness: 40 },
                     { label: 'Rejected', data: rejectedData, backgroundColor: '#ef4444', maxBarThickness: 40 },
                     { label: 'Joined', data: joinedData, backgroundColor: '#3b82f6', maxBarThickness: 40 }

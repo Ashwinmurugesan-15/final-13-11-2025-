@@ -214,7 +214,7 @@
                         <thead>
                             <tr>
                                 <th>Month</th>
-                                <th>Applicants</th>
+                                
                                 <th>Accepted</th>
                                 <th>Rejected</th>
                                 <th>In Notice</th>
@@ -502,7 +502,6 @@
             if (rows.length === 0) return;
 
             const months = [];
-            const applicants = [];
             const accepted = [];
             const rejected = [];
             const inNotice = [];
@@ -510,13 +509,11 @@
 
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                if (cells.length >= 6) {
-                    months.push(cells[0].textContent);
-                    applicants.push(parseInt(cells[1].textContent) || 0);
-                    accepted.push(parseInt(cells[2].textContent) || 0);
-                    rejected.push(parseInt(cells[3].textContent) || 0);
-                    inNotice.push(parseInt(cells[4].textContent) || 0);
-                    joined.push(parseInt(cells[5].textContent) || 0);
+                if (cells.length >= 4) {
+                    accepted.push(parseInt(cells[0].textContent) || 0);
+                    rejected.push(parseInt(cells[1].textContent) || 0);
+                    inNotice.push(parseInt(cells[2].textContent) || 0);
+                    joined.push(parseInt(cells[3].textContent) || 0);
                 }
             });
 
@@ -526,14 +523,6 @@
                 data: {
                     labels: months,
                     datasets: [
-                        {
-                            label: 'Applicants',
-                            data: applicants,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            fill: true,
-                            tension: 0.1
-                        },
                         {
                             label: 'Accepted',
                             data: accepted,

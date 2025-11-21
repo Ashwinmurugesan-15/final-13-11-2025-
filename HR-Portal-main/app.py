@@ -45,8 +45,7 @@ def create_sample_excel():
         # Stage-specific remarks
         'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks',
         # General remarks
-        'Remarks', 'Reject Mail Sent', 'Final Remarks',
-        'Month Count'
+        'Remarks', 'Reject Mail Sent', 'Final Remarks'
     ]
     
     # Add headers to the first row
@@ -90,7 +89,7 @@ def create_sample_excel():
                 'Round 1 Remarks': 'Strong technical skills demonstrated in Round 1.',
                 'Round 2 Remarks': 'Good problem-solving approach in Round 2.',
                 'Final Remarks': '',
-                'Month Count': '1',
+               
                 'Reference': 'Jane Smith'
             },
             {
@@ -124,7 +123,7 @@ def create_sample_excel():
                 'Round 1 Remarks': '',
                 'Round 2 Remarks': '',
                 'Final Remarks': 'Waiting for candidate response',
-                'Month Count': '2',
+                
                 'Reference': 'Robert Johnson'
             },
             {
@@ -157,7 +156,7 @@ def create_sample_excel():
                 'Round 1 Remarks': '',
                 'Round 2 Remarks': '',
                 'Final Remarks': 'Consider for junior positions',
-                'Month Count': '1',
+                
                 'Reference': 'Emily Davis'
             }
         ]
@@ -227,7 +226,7 @@ def save_data(data):
             # Stage-specific remarks that should be persisted
             'Initial Screening', 'Round 1 Remarks', 'Round 2 Remarks',
             # General/legacy remarks
-            'Remarks', 'Reject Mail Sent', 'Final Remarks', 'Month Count'
+            'Remarks', 'Reject Mail Sent', 'Final Remarks'
         ]
         
         # Build ordered headers: Date + desired fields present + any remaining headers
@@ -752,12 +751,11 @@ def delete_user(user_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    # Initialize user database
     init_user_db()
     # Apply header ordering to existing Excel data on startup
     try:
-        existing_data = load_data()
-        save_data(existing_data)
-    except Exception:
-        pass
-    app.run(debug=True, host='127.0.0.1', port=8000)
+        data = load_data()
+        save_data(data)
+    except Exception as e:
+        print(f"Error applying header ordering on startup: {e}")
+    app.run(debug=True, port=5000)

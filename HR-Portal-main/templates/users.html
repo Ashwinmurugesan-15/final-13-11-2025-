@@ -15,47 +15,57 @@
         }
 
         body {
-            background: linear-gradient(135deg, #e8ecf4 0%, #d4d8f0 100%);
+            background: #2c3e50;
+            background-attachment: fixed;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
         }
 
         .navbar {
-            background: linear-gradient(90deg, #5b5fef 0%, #7276f3 100%) !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 0.5rem 0;
-            min-height: 56px;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 0.75rem 0;
+            min-height: 70px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .navbar-brand {
-            font-weight: 600;
-            font-size: 1.25rem;
-            color: white !important;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            color: #667eea !important;
             display: flex;
             align-items: center;
+            padding: 0.5rem 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .navbar-nav .nav-link {
-            color: rgba(255, 255, 255, 0.95) !important;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            padding: 0.5rem 1rem !important;
-            margin: 0;
-            border-radius: 0;
-            transition: all 0.2s ease;
+            color: #667eea !important;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.625rem 1.25rem !important;
+            margin: 0 0.25rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
         .navbar-nav .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.15);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .navbar-nav .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .page-container {
@@ -74,35 +84,43 @@
         .page-title {
             font-size: 1.75rem;
             font-weight: 700;
-            color: #1f2937;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .btn-add-user {
-            background: #5b5fef;
-            color: white;
-            border: none;
-            padding: 0.625rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .btn {
+            border-radius: 12px;
+            font-weight: 700;
+            padding: 0.75rem 2rem;
             transition: all 0.3s ease;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.875rem;
         }
 
-        .btn-add-user:hover {
-            background: #4f46e5;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(91, 95, 239, 0.3);
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
 
         .card {
             border: none;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
             overflow: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
 
         .table {
@@ -110,12 +128,20 @@
         }
 
         .table thead th {
-            background-color: #f8fafc;
-            color: #1f2937;
+            background-color: #f7f9fc;
+            color: #2d3748;
             font-weight: 600;
+            text-transform: none;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            letter-spacing: 0;
             border-bottom: 1px solid #e2e8f0;
-            padding: 1rem 1.5rem;
-            font-size: 0.875rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 1.125rem 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
 
         .table tbody td {
@@ -123,6 +149,8 @@
             vertical-align: middle;
             color: #374151;
             border-bottom: 1px solid #f1f5f9;
+            background-color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
         }
 
         .table tbody tr:hover {
@@ -130,22 +158,30 @@
         }
 
         .badge {
-            padding: 0.375rem 0.75rem;
-            font-weight: 600;
-            font-size: 0.75rem;
-            border-radius: 6px;
+            padding: 0.4em 0.7em;
+            font-weight: 700;
+            font-size: 0.75em;
+            border-radius: 0.375rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            height: 24px;
         }
 
         .badge.bg-danger {
             background-color: #ef4444 !important;
+            background: linear-gradient(135deg, #ef4444 0%, #f97070 100%) !important;
         }
 
         .badge.bg-secondary {
             background-color: #6b7280 !important;
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%) !important;
         }
 
         .btn-delete {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #f97070 100%);
             color: white;
             border: none;
             padding: 0.5rem 1rem;
@@ -156,11 +192,13 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
 
         .btn-delete:hover {
-            background: #dc2626;
+            background: linear-gradient(135deg, #f97070 0%, #ef4444 100%);
             transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
         }
     </style>
 </head>
@@ -192,7 +230,7 @@
         <div class="page-header">
             <h1 class="page-title">User Management</h1>
             {% if isAdmin %}
-            <button class="btn-add-user" onclick="openAddUserModal()">
+            <button class="btn btn-primary" onclick="openAddUserModal()">
                 <i class="bi bi-plus-circle-fill"></i>
                 Add New User
             </button>
@@ -230,37 +268,37 @@
     <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 20px; border: none; background: #d1d5db;">
-                <div class="modal-header" style="background: transparent; border: none; padding: 1.5rem 2rem; border-radius: 20px 20px 0 0;">
-                    <h5 class="modal-title" style="color: #2563eb; font-weight: 600; font-size: 1.25rem;">
-                        <i class="bi bi-person-plus-fill me-2" style="font-size: 1.5rem;"></i>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus-fill me-2"></i>
                         Add New User
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="padding: 2rem;">
+                <div class="modal-body">
                     <form id="addUserForm">
                         <div class="mb-3">
-                            <label for="username" class="form-label" style="color: #374151; font-weight: 500; margin-bottom: 0.5rem;">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required style="padding: 0.75rem 1rem; border-radius: 10px; border: none; background: white; font-size: 0.95rem;">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label" style="color: #374151; font-weight: 500; margin-bottom: 0.5rem;">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required style="padding: 0.75rem 1rem; border-radius: 10px; border: none; background: white; font-size: 0.95rem;">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
                         </div>
                         <div class="mb-3">
-                            <div class="form-check" style="padding-left: 0; display: flex; align-items: center;">
-                                <input class="form-check-input" type="checkbox" id="isAdmin" name="isAdmin" style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; border-radius: 4px; border: 2px solid #9ca3af;">
-                                <label class="form-check-label" for="isAdmin" style="color: #374151; font-weight: 500; font-size: 0.95rem;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isAdmin" name="isAdmin">
+                                <label class="form-check-label" for="isAdmin">
                                     Admin User
                                 </label>
                             </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer" style="border: none; padding: 0 2rem 2rem 2rem; gap: 1rem;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: #c4c8cc; color: #374151; border: none; padding: 0.75rem 2rem; border-radius: 10px; font-weight: 600;">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveUser()" style="background: #2563eb; border: none; padding: 0.75rem 2rem; border-radius: 10px; font-weight: 600;">Save User</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">Save User</button>
                 </div>
             </div>
         </div>

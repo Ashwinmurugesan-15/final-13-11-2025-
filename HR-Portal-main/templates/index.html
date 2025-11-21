@@ -41,7 +41,7 @@
             font-weight: 700;
             font-size: 1.5rem;
             letter-spacing: -0.5px;
-            color: #667eea !important;
+            color: #637ef8 !important;
             display: flex;
             align-items: center;
             padding: 0.5rem 0;
@@ -105,7 +105,7 @@
         }
 
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5850e8 100%);
             color: white;
             font-weight: 700;
             border: none;
@@ -131,8 +131,8 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #5a74d5 100%);
+            box-shadow: 0 4px 15px rgba(31, 31, 32, 0.4);
             color: white;
         }
 
@@ -714,6 +714,21 @@
         .metrics-section-header:first-child {
             margin-top: 0;
         }
+
+        .no-row-margin {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .no-col-padding {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .full-width-container {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
     </style>
 </head>
 
@@ -727,7 +742,7 @@
         });
     </script>
     <nav class="navbar navbar-expand-lg navbar-dark" style="padding: 0.3rem 1rem;">
-        <div class="container-fluid px-2">
+        <div class="container-fluid full-width-container">
             <div class="d-flex align-items-center">
                 <img src="/static/images/GuhaTekHorizontalLarge.svg" alt="GuhaTek Logo"
                     style="height: 30px; margin-right: 1rem;">
@@ -769,12 +784,12 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <div class="tab-content">
             <!-- Data Management Tab -->
             <div class="tab-pane fade show active" id="dataTab">
-                <div class="row mb-4">
-                    <div class="col-md-12">
+                <div class="row mb-4 no-row-margin">
+                    <div class="col-md-12 no-col-padding">
                         <div class="card shadow-sm">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -782,6 +797,9 @@
                                         <i class="bi bi-clipboard-data me-2"></i>
                                         Candidate Management
                                     </h4>
+                                    <button id="toggleFiltersBtn" class="btn btn-primary ms-auto">
+                                        <i class="bi bi-funnel-fill me-2"></i>Toggle Filters
+                                    </button>
                                     <button id="addCandidateBtn" class="btn btn-primary" onclick="openAddModal()"
                                         style="display: none;">
                                         <i class="bi bi-plus-circle-fill me-2"></i>Add New Candidate
@@ -789,7 +807,7 @@
                                 </div>
                             </div>
                             <div class="card-body" style="background: #dfe3f4; padding: 1.5rem 2rem; margin-bottom: 0;">
-                                <div class="row g-3">
+                                <div class="row g-3" id="filterContainer" style="display: none;">
                                     <div class="col-md-6">
                                         <label for="positionFilter"
                                             class="form-label fw-semibold text-dark mb-2">Position</label>
@@ -814,6 +832,48 @@
                                             <option value="AI/ML Intern">AI/ML Intern</option>
                                             <option value="Internship">Internship</option>
                                             <option value="Fresher">Fresher</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="locationFilter"
+                                            class="form-label fw-semibold text-dark mb-2">Location</label>
+                                        <select id="locationFilter" class="form-select"
+                                            style="border-radius: 8px; border: 1px solid #cbd5e1;">
+                                            <option value="">All Locations</option>
+                                            <option value="Bangalore">Bangalore</option>
+                                            <option value="Chennai">Chennai</option>
+                                            <option value="Hyderabad">Hyderabad</option>
+                                            <option value="Mumbai">Mumbai</option>
+                                            <option value="Delhi">Delhi</option>
+                                            <option value="Remote">Remote</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="experienceFilter"
+                                            class="form-label fw-semibold text-dark mb-2">Years of Experience</label>
+                                        <select id="experienceFilter" class="form-select"
+                                            style="border-radius: 8px; border: 1px solid #cbd5e1;">
+                                            <option value="">Any Experience</option>
+                                            <option value="0-1">0-1 Year</option>
+                                            <option value="1-3">1-3 Years</option>
+                                            <option value="3-5">3-5 Years</option>
+                                            <option value="5-8">5-8 Years</option>
+                                            <option value="8-10">8-10 Years</option>
+                                            <option value="10+">10+ Years</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="noticePeriodFilter"
+                                            class="form-label fw-semibold text-dark mb-2">Notice Period</label>
+                                        <select id="noticePeriodFilter" class="form-select"
+                                            style="border-radius: 8px; border: 1px solid #cbd5e1;">
+                                            <option value="">Any Notice Period</option>
+                                            <option value="immediate">Immediate</option>
+                                            <option value="15days">15 Days</option>
+                                            <option value="30days">30 Days</option>
+                                            <option value="45days">45 Days</option>
+                                            <option value="60days">60 Days</option>
+                                            <option value="90days">90 Days</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
@@ -848,7 +908,7 @@
                 <!-- View Switcher -->
                 <div class="row mb-3">
                     <div class="col-md-12 d-flex justify-content-end align-items-center">
-                        <label for="viewType" class="me-2 fw-bold text-white">View Type:</label>
+                        <label for="viewType" class="me-2 fw-bold text-white">View :</label>
                         <select id="viewType" class="form-select" style="width: 200px;">
                             <option value="numeric">Numeric</option>
                             <option value="chart">Chart</option>
